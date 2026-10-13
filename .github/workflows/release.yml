@@ -56,6 +56,8 @@ jobs:
             dist/*.exe
             dist/*.dmg
             dist/*.AppImage
+            dist/*.zip
+            dist/latest*.yml
 
   release:
     name: Publish GitHub Release
@@ -72,7 +74,7 @@ jobs:
       - name: Generate SHA-256 checksums
         working-directory: artifacts
         run: |
-          sha256sum *.exe *.dmg *.AppImage > SHA256SUMS.txt
+          sha256sum *.exe *.dmg *.AppImage *.zip > SHA256SUMS.txt
           cat SHA256SUMS.txt
 
       - name: Create / update release with assets

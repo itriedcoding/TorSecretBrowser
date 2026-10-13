@@ -38,8 +38,22 @@
 
     <div class="right-group">
       <button id="new-identity" title="New Tor identity (new circuits)">New Identity</button>
+      <button id="update-btn" class="icon" title="Software updates" aria-haspopup="dialog" aria-expanded="false">&#8595;</button>
       <button id="tor-chip" class="chip" title="Tor status">Tor: …</button>
     </div>
+  </div>
+
+  <!-- ===================== Update panel ================= -->
+  <div id="update-panel" class="hidden" role="dialog" aria-label="Software updates">
+    <div class="update-head">
+      <strong>Software updates</strong>
+      <button id="update-close" class="update-close" title="Close" aria-label="Close">&times;</button>
+    </div>
+    <p id="update-status" class="update-status">…</p>
+    <div class="update-progress hidden"><div id="update-bar"></div></div>
+    <pre id="update-notes" class="update-notes hidden"></pre>
+    <div id="update-actions" class="update-actions"></div>
+    <p class="update-privacy">Version checks and downloads are routed through your Tor connection and never sent over the clearnet.</p>
   </div>
 
   <!-- ===================== Content viewport ============= -->

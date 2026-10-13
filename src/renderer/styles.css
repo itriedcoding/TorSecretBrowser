@@ -167,6 +167,124 @@ html, body {
 
 #new-identity { font-size: 12px !important; border: 1px solid var(--border) !important; border-radius: 14px !important; height: 28px !important; }
 
+/* update button: a small down-arrow with an optional "new version" dot */
+#update-btn { position: relative; font-size: 16px !important; }
+#update-btn.has-update::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 2px var(--bg-elev2);
+}
+
+/* --------------------------- update panel ------------------------------ */
+#update-panel {
+  position: absolute;
+  top: 90px;
+  right: 10px;
+  width: 360px;
+  max-width: calc(100vw - 20px);
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  z-index: 20;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+#update-panel.hidden { display: none; }
+
+.update-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.update-head strong { font-size: 13px; }
+.update-close {
+  border: 0;
+  background: transparent;
+  color: var(--fg-dim);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+}
+.update-close:hover { background: rgba(255, 255, 255, 0.1); color: var(--fg); }
+
+.update-status {
+  color: var(--fg-dim);
+  font-size: 12.5px;
+  line-height: 1.5;
+  margin: 0 0 12px;
+  user-select: text;
+}
+
+.update-progress {
+  height: 6px;
+  background: var(--bg);
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 0 0 12px;
+}
+.update-progress.hidden { display: none; }
+#update-bar {
+  height: 100%;
+  width: 0%;
+  background: var(--accent);
+  transition: width 0.3s ease;
+}
+
+.update-notes {
+  max-height: 160px;
+  overflow: auto;
+  background: #131316;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 11px;
+  color: var(--fg-dim);
+  white-space: pre-wrap;
+  user-select: text;
+  margin: 0 0 12px;
+}
+.update-notes.hidden { display: none; }
+
+.update-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.update-action {
+  border: 1px solid var(--border);
+  background: var(--bg-elev2);
+  color: var(--fg);
+  padding: 7px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12.5px;
+}
+.update-action:hover { background: #34343d; }
+.update-action.primary {
+  border-color: transparent;
+  background: var(--accent);
+  color: #fff;
+}
+.update-action.primary:hover { filter: brightness(1.1); }
+
+.update-privacy {
+  color: #77777f;
+  font-size: 11px;
+  line-height: 1.45;
+  margin: 0;
+}
+
 /* ------------------------------ viewport ------------------------------- */
 /* This element is purely a placeholder; the native view is drawn on top of
    exactly this rectangle. It must fill all remaining space. */

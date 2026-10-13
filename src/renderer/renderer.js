@@ -29,6 +29,13 @@ const els = {
   overlayProgress: document.getElementById('overlay-progress'),
   overlayAction: document.getElementById('overlay-action'),
   overlayLog: document.getElementById('overlay-log'),
+  updateBtn: document.getElementById('update-btn'),
+  updatePanel: document.getElementById('update-panel'),
+  updateClose: document.getElementById('update-close'),
+  updateStatus: document.getElementById('update-status'),
+  updateBar: document.getElementById('update-bar'),
+  updateNotes: document.getElementById('update-notes'),
+  updateActions: document.getElementById('update-actions'),
 };
 
 const state = {
@@ -36,6 +43,7 @@ const state = {
   activeId: null,
   tor: { state: 'idle', progress: 0 },
   overlayVisible: false,
+  update: { state: 'idle' },
 };
 
 /* ----------------------------------------------------------------------- */
@@ -201,10 +209,104 @@ function renderTorStatus(status) {
 }
 
 /* ----------------------------------------------------------------------- */
+/* Software updates                                                         */
+/* ----------------------------------------------------------------------- */
+function showUpdatePanel() {
+  els.updatePanel.classList.remove('hidden');
+  els.updateBtn.setAttribute('aria-expanded', 'true');
+}
+function hideUpdatePanel() {
+  els.updatePanel.classList.add('hidden');
+  els.updateBtn.setAttribute('aria-expanded', 'false');
+}
+
+function formatRate(bps) {
+  if (!bps) return '';
+  const kib = bps / 1024;
+  return kib < 1024 ? `${kib.toFixed(0)} KiB/s` : `${(kib / 1024).toFixed(1)} MiB/s`;
+}
+
+function addUpdateAction(label, onClick, primary) {
+  const b = document.createElement('button');
+  b.className = 'update-action' + (primary ? ' primary' : '');
+  b.textContent = label;
+  b.addEventListener('click', onClick);
+  els.updateActions.appendChild(b);
+  return b;
+}
+
+function renderUpdate(status) {
+  state.update = status || { state: 'idle' };
+  const s = state.update;
+  const cur = s.currentVersion ? `v${s.currentVersion}` : 'this build';
+
+  els.updateActions.textContent = '';
+  els.updateNotes.classList.add('hidden');
+  els.updateNotes.textContent = '';
+  els.updateBar.style.width = '0%';
+  els.updateBar.parentElement.classList.add('hidden');
+
+  const flagged = s.state === 'available' || s.state === 'downloaded';
+  els.updateBtn.classList.toggle('has-update', flagged);
+
+  switch (s.state) {
+    case 'unsupported':
+      els.updateStatus.textContent = `You are running ${cur}. This is an unpackaged development build, so self-updating is disabled.`;
+      addUpdateAction('Open release page', () => api.openUpdatePage());
+      break;
+    case 'checking':
+      els.updateStatus.textContent = 'Checking for updates over Tor…';
+      break;
+    case 'available':
+      els.updateStatus.textContent = `Version ${s.version} is available — you have ${cur}.`;
+      if (s.manualOnly) {
+        addUpdateAction('Open download page', () => api.openUpdatePage(), true);
+      } else {
+        addUpdateAction('Download update', () => api.downloadUpdate(), true);
+      }
+      break;
+    case 'downloading':
+      els.updateBar.parentElement.classList.remove('hidden');
+      els.updateBar.style.width = (s.percent || 0) + '%';
+      els.updateStatus.textContent =
+        `Downloading update over Tor… ${s.percent || 0}%` +
+        (s.bytesPerSecond ? ` (${formatRate(s.bytesPerSecond)})` : '');
+      break;
+    case 'downloaded':
+      els.updateStatus.textContent = `Version ${s.version} has been downloaded and is ready to install.`;
+      addUpdateAction('Restart & install', () => api.installUpdate(), true);
+      addUpdateAction('Later', () => hideUpdatePanel());
+      break;
+    case 'not-available':
+      els.updateStatus.textContent = `You are up to date (${cur}).`;
+      addUpdateAction('Check again', () => api.checkForUpdates());
+      break;
+    case 'error':
+      els.updateStatus.textContent = s.error ? `Update error: ${s.error}` : 'Update failed.';
+      addUpdateAction('Retry', () => api.checkForUpdates(), true);
+      addUpdateAction('Open release page', () => api.openUpdatePage());
+      break;
+    default:
+      els.updateStatus.textContent = `You are running ${cur}.`;
+      addUpdateAction('Check for updates', () => api.checkForUpdates(), true);
+  }
+
+  if (s.releaseNotes) {
+    els.updateNotes.textContent = String(s.releaseNotes).slice(0, 4000);
+    els.updateNotes.classList.remove('hidden');
+  }
+
+  // Surface an untouched "available" update by highlighting the toolbar button.
+  if (flagged) els.updateBtn.title = `Update available (v${s.version})`;
+  else els.updateBtn.title = 'Software updates';
+}
+
+/* ----------------------------------------------------------------------- */
 /* Wiring                                                                   */
 /* ----------------------------------------------------------------------- */
 api.onTabsUpdated(applyTabs);
 api.onTorStatus(renderTorStatus);
+api.onUpdateStatus(renderUpdate);
 api.onShortcut((name) => {
   if (name === 'focus-url') els.url.focus();
 });
@@ -248,6 +350,12 @@ els.torChip.addEventListener('click', () => {
   if (!state.overlayVisible && state.tor.state === 'error') renderTorStatus(state.tor);
 });
 
+els.updateBtn.addEventListener('click', () => {
+  if (els.updatePanel.classList.contains('hidden')) showUpdatePanel();
+  else hideUpdatePanel();
+});
+els.updateClose.addEventListener('click', hideUpdatePanel);
+
 // Keyboard shortcuts that work while the chrome UI itself has focus. Shortcuts
 // while a web page is focused are handled in the main process (tabs.js).
 window.addEventListener('keydown', (e) => {
@@ -265,6 +373,10 @@ window.addEventListener('keydown', (e) => {
   try {
     const status = await api.getTorStatus();
     renderTorStatus(status);
+  } catch (_) {}
+  try {
+    const update = await api.getUpdateStatus();
+    renderUpdate(update);
   } catch (_) {}
   syncBounds();
 })();

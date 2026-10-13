@@ -36,9 +36,17 @@ contextBridge.exposeInMainWorld('tsb', {
   // --- layout --------------------------------------------------------------
   setContentBounds: (rect) => ipcRenderer.invoke('ui:content-bounds', rect),
 
+  // --- updates -------------------------------------------------------------
+  getUpdateStatus: () => ipcRenderer.invoke('update:get-status'),
+  checkForUpdates: () => ipcRenderer.invoke('update:check'),
+  downloadUpdate: () => ipcRenderer.invoke('update:download'),
+  installUpdate: () => ipcRenderer.invoke('update:install'),
+  openUpdatePage: () => ipcRenderer.invoke('update:open-release'),
+
   // --- events --------------------------------------------------------------
   onTabsUpdated: (cb) => subscribe('tabs:updated', cb),
   onTorStatus: (cb) => subscribe('tor:status', cb),
   onTorLog: (cb) => subscribe('tor:log', cb),
   onShortcut: (cb) => subscribe('ui:shortcut', cb),
+  onUpdateStatus: (cb) => subscribe('update:status', cb),
 });

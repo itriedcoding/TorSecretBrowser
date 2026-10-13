@@ -18,6 +18,7 @@ const { applyCommandLineSwitches } = require('./privacy');
 const { findTorBinary, torDataDir } = require('./paths');
 const { TorManager } = require('./tor-manager');
 const { TabManager } = require('./tabs');
+const updater = require('./updater');
 
 // ---------------------------------------------------------------------------
 // Privacy switches MUST be set before the app becomes ready.
@@ -34,6 +35,7 @@ let mainWindow = null;
 let tor = null;
 let tabs = null;
 let torError = null;
+let updateCheckScheduled = false;
 
 const singleInstance = app.requestSingleInstanceLock();
 if (!singleInstance) {
@@ -135,6 +137,9 @@ async function startTor() {
       .then(async () => {
         pushTorStatus();
         if (tabs && tabs.tabs.size === 0) createInitialTab();
+        // Route update traffic through this Tor instance, then check once.
+        updater.setSocksPort(tor.socksPort);
+        scheduleUpdateCheck();
       })
       .catch((err) => {
         torError = err.message;
@@ -178,6 +183,35 @@ function ensureTabs() {
 function createInitialTab() {
   if (!tabs) return;
   if (tabs.tabs.size === 0) tabs.createTab();
+}
+
+/** Open a URL in a new (Tor-proxied) tab. Used by the updater. */
+function openUrlInTab(url) {
+  if (!tor) {
+    sendToChromeLog(`update: cannot open ${url} (Tor is not running)`);
+    return;
+  }
+  ensureTabs();
+  if (tabs) tabs.createTab(url);
+}
+
+function sendToChromeLog(line) {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('tor:log', line);
+  }
+}
+
+/**
+ * Run a single background update check once Tor is up. It is deliberately
+ * delayed so it never competes with bootstrap, and it is a no-op in unpackaged
+ * development builds.
+ */
+function scheduleUpdateCheck() {
+  if (updateCheckScheduled) return;
+  updateCheckScheduled = true;
+  if (!app.isPackaged) return;
+  const timer = setTimeout(() => updater.check(), 8000);
+  if (timer && typeof timer.unref === 'function') timer.unref();
 }
 
 // ---------------------------------------------------------------------------
@@ -265,6 +299,20 @@ function registerIpc() {
     electron: process.versions.electron,
     chrome: process.versions.chrome,
   }));
+
+  // --- auto-update ---------------------------------------------------------
+  ipcMain.handle('update:get-status', () => updater.snapshot());
+
+  ipcMain.handle('update:check', () => updater.check());
+
+  ipcMain.handle('update:download', () => updater.download());
+
+  ipcMain.handle('update:install', () => updater.install());
+
+  ipcMain.handle('update:open-release', () => {
+    updater.openReleasePage();
+    return true;
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -279,6 +327,12 @@ app.whenReady().then(async () => {
 
   registerIpc();
   createWindow();
+
+  updater.init({
+    getWindow: () => mainWindow,
+    openUrl: openUrlInTab,
+    log: sendToChromeLog,
+  });
 
   // Give the renderer a moment to mount before we start streaming status.
   mainWindow.webContents.once('did-finish-load', async () => {
