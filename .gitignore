@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+out/
+.vercel/
+.vercel_build_output/
+
+# Bundled / downloaded Tor binaries (fetched via `npm run fetch-tor`).
+# The whole directory is recreated on demand; never commit binaries.
+resources/tor/
+
+# Local runtime data / logs
+*.log
+tor-data/
+.tor-data/
+
+# OS cruft
+.DS_Store
+Thumbs.db
+desktop.ini

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <!-- Lock the chrome UI down as hard as the content pages. -->
+  <meta
+    http-equiv="Content-Security-Policy"
+    content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'none'"
+  />
+  <title>Tor Secret Browser</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- ===================== Tab strip ===================== -->
+  <div id="tabstrip">
+    <div id="tabs"></div>
+    <button id="new-tab" title="New tab (Ctrl+T)">+</button>
+  </div>
+
+  <!-- ===================== Toolbar ====================== -->
+  <div id="toolbar">
+    <div class="nav-group">
+      <button id="back" title="Back (Alt+Left)" disabled>‹</button>
+      <button id="forward" title="Forward (Alt+Right)" disabled>›</button>
+      <button id="reload" title="Reload (Ctrl+R)">⟳</button>
+    </div>
+
+    <form id="omnibox" autocomplete="off">
+      <span id="scheme-badge" class="badge">http</span>
+      <input
+        id="url"
+        type="text"
+        spellcheck="false"
+        placeholder="Search or enter a .onion / clearnet address"
+      />
+      <span id="lock" class="lock" title="All traffic is routed through Tor">●</span>
+    </form>
+
+    <div class="right-group">
+      <button id="new-identity" title="New Tor identity (new circuits)">New Identity</button>
+      <button id="tor-chip" class="chip" title="Tor status">Tor: …</button>
+    </div>
+  </div>
+
+  <!-- ===================== Content viewport ============= -->
+  <!-- The native WebContentsView is positioned exactly over this element. -->
+  <div id="viewport"></div>
+
+  <!-- ===================== Blocking overlay ============= -->
+  <div id="overlay" class="hidden">
+    <div class="overlay-card">
+      <div class="spinner" id="overlay-spinner"></div>
+      <h1 id="overlay-title">Starting Tor…</h1>
+      <p id="overlay-message">Establishing a circuit to the Tor network.</p>
+      <div class="progress"><div id="overlay-progress"></div></div>
+      <button id="overlay-action" class="hidden">Retry</button>
+      <details id="overlay-log-wrap">
+        <summary>Diagnostic log</summary>
+        <pre id="overlay-log"></pre>
+      </details>
+    </div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

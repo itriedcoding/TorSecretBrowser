@@ -1,0 +1,42 @@
+# ---------------------------------------------------------------------------
+# Tor Secret Browser - torrc template
+# ---------------------------------------------------------------------------
+# This file is NOT read directly at runtime. TorManager generates its own
+# torrc in the user-data directory on every launch so that ports and paths
+# can be selected dynamically. This template exists for documentation and as
+# a reference if you want to run Tor yourself and point the browser at it.
+#
+# Placeholders replaced by the app at runtime:  %SOCKS_PORT% %CONTROL_PORT%
+#                                               %DATA_DIR%    %LOG_LEVEL%
+# ---------------------------------------------------------------------------
+
+# Listen for SOCKS5 client connections on the loopback interface only.
+#   IsolateSOCKSAuth     -> give each unique SOCKS username/password its own
+#                           circuit (per-tab circuit isolation).
+#   IsolateDestAddr      -> separate circuits per destination address.
+#   IsolateDestPort      -> separate circuits per destination port.
+SocksPort 127.0.0.1:%SOCKS_PORT% IsolateSOCKSAuth IsolateDestAddr IsolateDestPort
+
+# Refuse any SOCKS request that would resolve a hostname locally. This is a
+# hard guard against DNS leaks: only the Tor process ever resolves names.
+SafeSocks 1
+WarnUnsafeSocks 1
+
+# Control port for the browser (bootstrap status, NEWNYM / new identity).
+ControlPort 127.0.0.1:%CONTROL_PORT%
+CookieAuthentication 1
+CookieAuthFileGroupReadable 0
+
+# Keep all state (including the control auth cookie) inside our data dir.
+DataDirectory %DATA_DIR%
+
+# Never act as a relay or exit node. Client-only.
+ClientOnly 1
+ExitPolicy reject *:*
+
+# Reduce disk writes (privacy + SSD longevity). State is still kept, but
+# fewer things are flushed.
+AvoidDiskWrites 1
+
+# Logs go to stdout so the manager can parse bootstrap lines as a fallback.
+Log %LOG_LEVEL% stdout

@@ -1,0 +1,77 @@
+name: Build installers
+
+# Produces real, downloadable installers:
+#   - Windows  : NSIS installer  (TorSecretBrowser-win-x64-setup.exe)
+#   - macOS    : DMG (Intel + Apple Silicon)
+#   - Linux    : AppImage
+# Each build downloads the official Tor Expert Bundle for its platform and
+# bundles it, so the installed app works offline with no extra setup.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: ${{ matrix.label }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { label: Windows x64,  os: windows-latest, args: '',        artifact: windows }
+          - { label: Linux x64,    os: ubuntu-latest,  args: '',        artifact: linux }
+          - { label: macOS Intel,  os: macos-latest,   args: '--x64',   artifact: macos-x64 }
+          - { label: macOS ARM64,  os: macos-latest,   args: '--arm64', artifact: macos-arm64 }
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Download Tor for this platform
+        run: npm run fetch-tor
+
+      - name: Build installer
+        run: npx electron-builder ${{ matrix.args }} --publish never
+        env:
+          # Never attempt code signing in CI (no certificates configured).
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+      - name: Upload installer(s)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          if-no-files-found: error
+          path: |
+            dist/*.exe
+            dist/*.dmg
+            dist/*.AppImage
+
+  release:
+    name: Publish GitHub Release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all installers
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create / update release with assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**
+          generate_release_notes: true
+          fail_on_unmatched_files: false

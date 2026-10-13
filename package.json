@@ -1,0 +1,91 @@
+{
+  "name": "tor-secret-browser",
+  "productName": "Tor Secret Browser",
+  "version": "1.0.0",
+  "description": "A hardened Electron browser that routes all traffic through the Tor network, with native .onion support and no network leaks.",
+  "main": "src/main/index.js",
+  "private": true,
+  "author": "itriedcoding",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/itriedcoding/TorSecretBrowser.git"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "fetch-tor": "node scripts/fetch-tor.js",
+    "syntax-check": "node scripts/syntax-check.js",
+    "smoke": "electron scripts/smoke-test.js",
+    "test:tor": "node scripts/tor-live-test.js",
+    "dist": "electron-builder --publish never",
+    "dist:dir": "electron-builder --dir --publish never"
+  },
+  "keywords": [
+    "tor",
+    "onion",
+    "privacy",
+    "anonymity",
+    "browser",
+    "electron",
+    "socks5"
+  ],
+  "devDependencies": {
+    "electron": "^32.3.3",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "org.torsecret.browser",
+    "productName": "Tor Secret Browser",
+    "artifactName": "TorSecretBrowser-${os}-${arch}.${ext}",
+    "asar": true,
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "resources/torrc.template",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/tor",
+        "to": "tor",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "TorSecretBrowser-win-${arch}-setup.${ext}"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.utilities",
+      "icon": "build/icon.png",
+      "identity": null
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Network",
+      "icon": "build/icon.png"
+    }
+  }
+}
