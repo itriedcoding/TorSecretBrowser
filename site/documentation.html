@@ -39,6 +39,7 @@
         <strong>On this page</strong>
         <a href="#getting-started">Getting started</a>
         <a href="#using">Using the browser</a>
+        <a href="#updates">Automatic updates</a>
         <a href="#links">Link directory</a>
         <a href="#scanner">File scanner</a>
         <a href="#privacy">How privacy works</a>
@@ -82,6 +83,29 @@
           <li><strong>New Identity:</strong> rotates your circuits and clears all per-tab
               state in one action.</li>
         </ul>
+
+        <h2 id="updates">Automatic updates</h2>
+        <p>Installed builds keep themselves current. Shortly after Tor reaches 100%, the app
+           makes one anonymous request — through the very same Tor connection — to the project's
+           GitHub releases to find out whether a newer version exists. Nothing is sent except
+           that version request, and you are always asked before anything is downloaded or
+           installed.</p>
+        <ul class="checks">
+          <li><strong>Routed through Tor.</strong> Version checks and update downloads use the
+              app's Tor SOCKS proxy, never the clearnet, so they are indistinguishable from your
+              normal browsing.</li>
+          <li><strong>Windows &amp; Linux.</strong> The update downloads in the background; when
+              it is ready, choose <em>Restart &amp; install</em> and the app relaunches on the new
+              version.</li>
+          <li><strong>macOS.</strong> Auto-install requires a code-signed build. These builds are
+              unsigned, so the app detects a new version and opens the download page for you
+              instead of pretending to install it.</li>
+          <li><strong>Manual check.</strong> Click the <strong>&darr;</strong> button in the
+              toolbar at any time to check, read the release notes and install.</li>
+        </ul>
+        <p>Every release also publishes its update metadata (<code>latest*.yml</code>) and a
+           <code>SHA256SUMS.txt</code> so each downloaded file can be independently verified —
+           the same values the <a href="/scan">file scanner</a> checks against.</p>
 
         <h2 id="links">Clearnet &amp; .onion link directory</h2>
         <p>The new-tab page ships with a built-in directory of clearnet and

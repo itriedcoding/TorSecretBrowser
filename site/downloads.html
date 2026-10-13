@@ -48,6 +48,14 @@
         </a>
       </div>
 
+      <div class="note">
+        <strong>Automatic, anonymous updates.</strong> Installed builds check for updates through
+        their own Tor connection &mdash; never the clearnet &mdash; and update in place. On Windows
+        and Linux the update installs itself after a restart; on unsigned macOS builds the app
+        opens this download page instead. You can also check any time from the toolbar
+        (<a href="/documentation#updates">how updates work</a>).
+      </div>
+
       <div class="platforms">
         <div class="platform" data-platform="windows">
           <div class="p-head">
@@ -55,7 +63,7 @@
             <strong>Windows</strong>
           </div>
           <a class="dl" data-dl="TorSecretBrowser-win-x64-setup.exe" href="https://github.com/itriedcoding/TorSecretBrowser/releases/latest/download/TorSecretBrowser-win-x64-setup.exe" rel="noopener">
-            <span>Windows 10 / 11 &middot; 64-bit <span class="meta">— 90.6 MiB</span></span>
+            <span>Windows 10 / 11 &middot; 64-bit <span class="meta">— 90.9 MiB</span></span>
             <span class="go">Download &darr;</span>
           </a>
           <p class="hint">Signed installers are not available yet — Windows SmartScreen may warn. Click <em>More info &rarr; Run anyway</em>.</p>
@@ -68,11 +76,11 @@
             <span class="pill amber" style="margin-left:auto;">Universal builds</span>
           </div>
           <a class="dl" data-dl="TorSecretBrowser-mac-arm64.dmg" href="https://github.com/itriedcoding/TorSecretBrowser/releases/latest/download/TorSecretBrowser-mac-arm64.dmg" rel="noopener">
-            <span>Apple Silicon (M-series) <span class="meta">— 110.8 MiB</span></span>
+            <span>Apple Silicon (M-series) <span class="meta">— 111.3 MiB</span></span>
             <span class="go">Download &darr;</span>
           </a>
           <a class="dl" data-dl="TorSecretBrowser-mac-x64.dmg" href="https://github.com/itriedcoding/TorSecretBrowser/releases/latest/download/TorSecretBrowser-mac-x64.dmg" rel="noopener">
-            <span>Intel <span class="meta">— 115.1 MiB</span></span>
+            <span>Intel <span class="meta">— 115.6 MiB</span></span>
             <span class="go">Download &darr;</span>
           </a>
           <p class="hint">Builds are unsigned. On first launch, right-click the app &rarr; <em>Open</em>, or run <code>xattr -dr com.apple.quarantine /Applications/Tor\ Secret\ Browser.app</code>.</p>
@@ -84,7 +92,7 @@
             <strong>Linux</strong>
           </div>
           <a class="dl" data-dl="TorSecretBrowser-linux-x86_64.AppImage" href="https://github.com/itriedcoding/TorSecretBrowser/releases/latest/download/TorSecretBrowser-linux-x86_64.AppImage" rel="noopener">
-            <span>x86_64 &middot; AppImage <span class="meta">— 134.9 MiB</span></span>
+            <span>x86_64 &middot; AppImage <span class="meta">— 135.4 MiB</span></span>
             <span class="go">Download &darr;</span>
           </a>
           <p class="hint">Make it executable and run: <code>chmod +x TorSecretBrowser-linux-x86_64.AppImage &amp;&amp; ./TorSecretBrowser-linux-x86_64.AppImage</code>. If it fails to start, install <code>libfuse2</code>.</p>
@@ -118,34 +126,37 @@
           <tbody>
             <tr>
               <td><code>TorSecretBrowser-win-x64-setup.exe</code></td>
-              <td>94,998,313</td>
-              <td><code>58343a3525e0f50462d75cdb2ba3115ed2eb7eae2f9924b728e440bdb7587358</code></td>
+              <td>95,322,260</td>
+              <td><code>44d34d2d43b866687a2f25fac8c568f74734bc3efa176937dc00844f3ebab0b0</code></td>
             </tr>
             <tr>
               <td><code>TorSecretBrowser-mac-x64.dmg</code></td>
-              <td>120,646,929</td>
-              <td><code>2206ef05aebd777496db497458f6a4331e6eebcbbf1cae9e3c65e9b8bf1b1df2</code></td>
+              <td>121,166,014</td>
+              <td><code>d274f5e70a50bff3356d959be25fb0bc1246b9e77cdb3c80a2f10fd69916777f</code></td>
             </tr>
             <tr>
               <td><code>TorSecretBrowser-mac-arm64.dmg</code></td>
-              <td>116,217,631</td>
-              <td><code>6fb2e04a79b9d5ce46c638fc23ddf418b1c1dac3283dbaec353dc1b53615aaa3</code></td>
+              <td>116,697,544</td>
+              <td><code>133c06426a8eadc571756212d0983fa9241f9427592ace06af8aa722082f9e55</code></td>
             </tr>
             <tr>
               <td><code>TorSecretBrowser-linux-x86_64.AppImage</code></td>
-              <td>141,477,071</td>
-              <td><code>e0ef408e4d8a2b19a71cc20de9fc3282d0cfec4fa2ab990be13dbbc44b042f82</code></td>
+              <td>141,989,603</td>
+              <td><code>d37747e7dc70035ec2a17bbd644fbef65703240b383560be944d32cf5ef63bb0</code></td>
             </tr>
           </tbody>
         </table>
       </div>
       <div class="note">
-        These checksums correspond to release <strong>v1.1.1</strong>. The same values are
+        These checksums correspond to release <strong>v1.2.0</strong>. The same values are
         published as <a href="https://github.com/itriedcoding/TorSecretBrowser/releases/latest/download/SHA256SUMS.txt" target="_blank" rel="noopener">SHA256SUMS.txt</a>
         on every release. On Windows:
         <code>Get-FileHash .\TorSecretBrowser-win-x64-setup.exe -Algorithm SHA256</code>.
         On macOS/Linux: <code>shasum -a 256 &lt;file&gt;</code>. Compare against the values
         shown here or on the <a href="https://github.com/itriedcoding/TorSecretBrowser/releases/latest" target="_blank" rel="noopener">GitHub release page</a>.
+        The release also carries <code>TorSecretBrowser-mac-*.zip</code> and the
+        <code>latest*.yml</code> update metadata — those are what the app's automatic updater
+        uses; if you are installing by hand, use the <code>.dmg</code>.
       </div>
     </section>
 

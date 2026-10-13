@@ -325,13 +325,13 @@
   // SHA256SUMS.txt on the GitHub release. Used only for the authenticity check.
   var OFFICIAL = {
     'TorSecretBrowser-win-x64-setup.exe':
-      { sha256: '58343a3525e0f50462d75cdb2ba3115ed2eb7eae2f9924b728e440bdb7587358', platform: 'Windows 64-bit', version: '1.1.1' },
+      { sha256: '44d34d2d43b866687a2f25fac8c568f74734bc3efa176937dc00844f3ebab0b0', platform: 'Windows 64-bit', version: '1.2.0' },
     'TorSecretBrowser-mac-x64.dmg':
-      { sha256: '2206ef05aebd777496db497458f6a4331e6eebcbbf1cae9e3c65e9b8bf1b1df2', platform: 'macOS Intel', version: '1.1.1' },
+      { sha256: 'd274f5e70a50bff3356d959be25fb0bc1246b9e77cdb3c80a2f10fd69916777f', platform: 'macOS Intel', version: '1.2.0' },
     'TorSecretBrowser-mac-arm64.dmg':
-      { sha256: '6fb2e04a79b9d5ce46c638fc23ddf418b1c1dac3283dbaec353dc1b53615aaa3', platform: 'macOS Apple Silicon', version: '1.1.1' },
+      { sha256: '133c06426a8eadc571756212d0983fa9241f9427592ace06af8aa722082f9e55', platform: 'macOS Apple Silicon', version: '1.2.0' },
     'TorSecretBrowser-linux-x86_64.AppImage':
-      { sha256: 'e0ef408e4d8a2b19a71cc20de9fc3282d0cfec4fa2ab990be13dbbc44b042f82', platform: 'Linux x86_64', version: '1.1.1' }
+      { sha256: 'd37747e7dc70035ec2a17bbd644fbef65703240b383560be944d32cf5ef63bb0', platform: 'Linux x86_64', version: '1.2.0' }
   };
 
   var EXT_GROUP = {

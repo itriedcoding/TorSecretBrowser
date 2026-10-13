@@ -27,6 +27,7 @@ and manages for you.
 | **Circuit isolation** | Each tab gets its own in-memory session partition **and** its own local SOCKS5 relay (`socks-shim.js`) that injects unique credentials toward Tor. With Tor's `IsolateSOCKSAuth`, distinct credentials ⇒ distinct circuits. |
 | **Privacy by default** | No telemetry switches, no persistent profile: partitions are created without the `persist:` prefix, so cookies/cache/storage live only in memory for the tab's lifetime. "New Identity" calls `SIGNAL NEWNYM` and drops all per-tab storage. |
 | **Clearnet + onion directory** | The new-tab page ships a verified directory of Tor Project and popular clearnet/`.onion` addresses, an "Open a link" box that accepts a clearnet URL, a `.onion` address or a search query, and a copy button on every onion address. The same directory is published on the website's Links page. |
+| **Automatic updates** | `src/main/updater.js` keeps installed builds current. Version checks and downloads are routed through the app's own Tor SOCKS proxy (`autoUpdater.netSession.setProxy`), so update traffic never touches the clearnet. Windows/Linux download and install in place; unsigned macOS builds detect the new version and link to the download page instead of faking an install. |
 | **Fingerprint resistance** | One common user agent for everyone, navigator smoothing, WebRTC removed. (See limitations — this is *partial*.) |
 
 ---
@@ -130,6 +131,16 @@ The packaged app carries `resources/tor/<platform>-<arch>/` with it
 install**. Run `npm run fetch-tor` before `npm run dist` on each target OS you
 build for.
 
+### Releases & the update feed
+
+Pushing a tag matching `v*` runs `.github/workflows/release.yml`. It builds the
+NSIS installer (Windows), DMGs **and** zips (macOS x64/arm64) and the AppImage
+(Linux), computes `SHA256SUMS.txt`, and attaches everything to the GitHub
+Release — including the electron-builder update metadata (`latest.yml`,
+`latest-mac.yml`, `latest-linux.yml`) that installed apps read to update
+themselves. Bump `version` in `package.json` before tagging so the app knows it
+is older than the release.
+
 ---
 
 ## Operating notes & troubleshooting
@@ -205,6 +216,7 @@ src/
     socks-shim.js    Per-tab SOCKS5 relay that adds isolation credentials
     privacy.js       Privacy switches, proxy + leak guards, hardening script
     paths.js         Locates the tor binary, computes data dirs
+    updater.js       Tor-routed auto-update (electron-updater) lifecycle
     tabs.js          WebContentsView tabs, isolated sessions, shortcuts
   preload/
     chrome-preload.js  Minimal contextBridge API for the UI

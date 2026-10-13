@@ -103,6 +103,11 @@
          network traffic is routed through the Tor network, which is operated by the Tor Project
          and thousands of independent volunteers; their handling of that traffic is governed by
          how Tor works, not by us.</p>
+      <p><strong>Updates.</strong> Automatic updates are the one time the app itself makes a
+         request. It asks the project&rsquo;s GitHub releases whether a newer version exists, and
+         any download is fetched through the same Tor connection the browser uses &mdash; never
+         over the clearnet. Those requests go to GitHub, not to us, and carry nothing beyond the
+         ordinary request itself. You can ignore the offer or check manually from the toolbar.</p>
 
       <h2>3. Data we collect</h2>
       <p>None. We do not collect, sell, rent or share personal data, because we do not receive
