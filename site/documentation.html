@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Documentation — Tor Secret Browser</title>
+  <meta name="description" content="How to install, use, build and verify Tor Secret Browser: first run and Tor bootstrap, .onion support, circuit isolation, configuration, troubleshooting and the full list of limitations.">
+  <link rel="canonical" href="https://tor-secret-browser.vercel.app/documentation">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <meta name="theme-color" content="#0b0714">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="/"><img src="/assets/logo.svg" alt="" width="30" height="30"> Tor Secret Browser</a>
+      <button class="nav-toggle" aria-label="Menu" aria-expanded="false">&#9776;</button>
+      <nav class="nav-links">
+        <a href="/" data-nav>Home</a>
+        <a href="/downloads" data-nav>Download</a>
+        <a href="/documentation" data-nav>Docs</a>
+        <a href="/links" data-nav>Links</a>
+        <a href="/showcase" data-nav>Showcase</a>
+        <a href="/privacy" data-nav>Privacy</a>
+        <a href="https://github.com/itriedcoding/TorSecretBrowser" target="_blank" rel="noopener">GitHub</a>
+        <a class="nav-cta" href="/downloads">Download</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container" style="padding-top:52px;">
+    <div class="section-head">
+      <h1>Documentation</h1>
+      <p>Everything you need to install, use, build and verify Tor Secret Browser.</p>
+    </div>
+
+    <div class="docs-layout">
+      <aside class="docs-toc">
+        <strong>On this page</strong>
+        <a href="#getting-started">Getting started</a>
+        <a href="#using">Using the browser</a>
+        <a href="#links">Link directory</a>
+        <a href="#privacy">How privacy works</a>
+        <a href="#onion">Onion services</a>
+        <a href="#identity">New Identity</a>
+        <a href="#configuration">Configuration</a>
+        <a href="#build">Build from source</a>
+        <a href="#verify">Verify the build</a>
+        <a href="#troubleshooting">Troubleshooting</a>
+        <a href="#limitations">Limitations</a>
+        <a href="#faq">FAQ</a>
+      </aside>
+
+      <article class="docs-body prose">
+        <h2 id="getting-started">Getting started</h2>
+        <p>Download the installer for your platform from the <a href="/downloads">downloads page</a>
+           and install it. The app carries its own copy of Tor, so there is no separate
+           Tor installation step.</p>
+        <ol class="plain">
+          <li><strong>Install</strong> and launch the application.</li>
+          <li>On first run it starts the bundled <code>tor</code> daemon and shows live
+              bootstrap progress on the status overlay.</li>
+          <li>When it reaches <strong>100%</strong>, you are connected. Type any address in
+              the toolbar — including <code>.onion</code> services.</li>
+        </ol>
+        <div class="note">
+          Bootstrapping can take from a few seconds to a minute depending on your network
+          and the current Tor consensus.
+        </div>
+
+        <h2 id="using">Using the browser</h2>
+        <ul class="checks">
+          <li><strong>Address bar:</strong> accepts normal URLs, domains and <code>.onion</code>
+              addresses. A full <code>https://</code> URL is used as-is; a bare host like
+              <code>example.com</code> or a <code>.onion</code> name is opened over
+              <code>http://</code>, so type <code>https://</code> yourself when a site requires it.</li>
+          <li><strong>Tabs:</strong> each tab is an isolated session with its own circuit
+              credentials. Open as many as you like.</li>
+          <li><strong>Tor status chip:</strong> shows bootstrap progress; click it to expand
+              the diagnostic log and see the daemon's output.</li>
+          <li><strong>New Identity:</strong> rotates your circuits and clears all per-tab
+              state in one action.</li>
+        </ul>
+
+        <h2 id="links">Clearnet &amp; .onion link directory</h2>
+        <p>The new-tab page ships with a built-in directory of clearnet and
+           <code>.onion</code> addresses for Tor Project services and a few well-known
+           sites. The <strong>Open a link</strong> box at the top of that page, and the
+           toolbar address bar, accept the same three kinds of input:</p>
+        <ul class="checks">
+          <li><strong>Clearnet URL</strong> &mdash; paste <code>example.com</code> or a full
+              <code>https://</code> URL and press Enter.</li>
+          <li><strong>.onion address</strong> &mdash; paste the whole 56-character name; Tor
+              resolves it directly. Every <code>.onion</code> row in the directory also has a
+              copy button.</li>
+          <li><strong>Search</strong> &mdash; plain words (separated by spaces) are sent to
+              DuckDuckGo's <code>.onion</code> search service instead of being treated as a URL.</li>
+        </ul>
+        <p>The same directory is published on this site at <a href="/links">Links</a>,
+           together with a checker that tells you exactly how a given link will be
+           opened.</p>
+
+        <h2 id="privacy">How privacy works</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Concern</th><th>Implementation</th></tr></thead>
+            <tbody>
+              <tr><td>Tor process</td><td>The app generates a <code>torrc</code>, spawns the real <code>tor</code> daemon, waits for the control port, authenticates with cookie auth and reports bootstrap progress.</td></tr>
+              <tr><td>All traffic through Tor</td><td>Every tab session is forced to <code>socks5://127.0.0.1:&lt;port&gt;</code> with <code>proxyBypassRules: '&lt;-loopback&gt;'</code>. Chromium's SOCKS5 uses remote DNS, so hostnames are resolved by Tor.</td></tr>
+              <tr><td>.onion resolution</td><td>Works for free — onion names are resolved by Tor over the same SOCKS5 channel.</td></tr>
+              <tr><td>No DNS leak</td><td>Chromium never resolves names itself, and the generated <code>torrc</code> sets <code>SafeSocks 1</code>, which makes Tor refuse any locally-resolved request.</td></tr>
+              <tr><td>No WebRTC leak</td><td>Runs with <code>--force-webrtc-ip-handling-policy=disable_non_proxied_udp</code>; the page's <code>RTCPeerConnection</code> and <code>mediaDevices</code> are removed. Tor carries no UDP.</td></tr>
+              <tr><td>No protocol escape</td><td><code>ws:</code>/<code>wss:</code> go through the proxy; every other scheme (e.g. <code>ftp:</code>, custom app URIs) is cancelled by a <code>webRequest</code> filter.</td></tr>
+              <tr><td>Circuit isolation</td><td>Each tab gets its own in-memory partition and its own local SOCKS5 relay that injects unique credentials. With Tor's <code>IsolateSOCKSAuth</code>, distinct credentials mean distinct circuits.</td></tr>
+              <tr><td>Privacy by default</td><td>No telemetry, no persistent profile: partitions are created without the <code>persist:</code> prefix, so cookies, cache and storage live only in memory.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2 id="onion">Onion services</h2>
+        <p>Onion v3 addresses (56-character <code>&lt;id&gt;.onion</code> names) are resolved by the
+           Tor daemon itself. Paste one into the address bar and press Enter — there is no
+           configuration, extension or "onion mode" to enable.</p>
+        <pre><code>http://duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion/</code></pre>
+
+        <h2 id="identity">New Identity</h2>
+        <p>Choosing <em>New Identity</em>:</p>
+        <ul class="plain">
+          <li>sends <code>SIGNAL NEWNYM</code> to Tor so future streams use fresh circuits;</li>
+          <li>rotates every tab's SOCKS credentials;</li>
+          <li>drops all per-tab cookies, cache and storage.</li>
+        </ul>
+        <p>Because every circuit is torn down, expect a few seconds of re-bootstrapping
+           before browsing feels fast again.</p>
+
+        <h2 id="configuration">Configuration</h2>
+        <p>The app locates a Tor binary in this order:</p>
+        <ol class="plain">
+          <li>the <code>TOR_BINARY</code> environment variable,</li>
+          <li>the bundled binary at <code>resources/tor/&lt;platform&gt;-&lt;arch&gt;/tor[.exe]</code>,</li>
+          <li><code>tor</code> / <code>tor.exe</code> on your <code>PATH</code>.</li>
+        </ol>
+        <p>Tor's state lives in <code>&lt;app user data&gt;/tor-data/</code> — this contains the
+           generated <code>torrc</code>, the control auth cookie and Tor's guard state.
+           Delete the folder at any time to reset your guards.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>OS</th><th>Location of <code>tor-data</code></th></tr></thead>
+            <tbody>
+              <tr><td>Windows</td><td><code>%APPDATA%\Tor Secret Browser\tor-data</code></td></tr>
+              <tr><td>macOS</td><td><code>~/Library/Application Support/Tor Secret Browser/tor-data</code></td></tr>
+              <tr><td>Linux</td><td><code>~/.config/Tor Secret Browser/tor-data</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2 id="build">Build from source</h2>
+        <p>Requires Node.js 18+ and npm. The download script needs <code>tar</code> (present on
+           Windows 10+, macOS and Linux).</p>
+        <pre id="build-cmds"><code># clone the repository
+git clone https://github.com/itriedcoding/TorSecretBrowser.git
+cd TorSecretBrowser
+
+# install Electron and build tooling
+npm install
+
+# download the official Tor Expert Bundle for your platform
+npm run fetch-tor
+
+# launch
+npm start</code></pre>
+        <button class="btn" data-copy="#build-cmds" type="button">Copy commands</button>
+
+        <h3>Package an installer</h3>
+        <pre><code>npm run dist      # installer for the current OS (NSIS / DMG / AppImage)
+npm run dist:dir  # unpacked build for quick testing</code></pre>
+
+        <h2 id="verify">Verify the build</h2>
+        <p>Three checks ship with the source, and none of them are placeholders:</p>
+        <pre><code>npm run syntax-check   # static parse of every source file
+npm run smoke          # Electron integration test; no network needed
+npm run test:tor       # launches real Tor, waits for bootstrap, then NEWNYM</code></pre>
+        <p><code>npm run smoke</code> stands up a fake Tor SOCKS5 endpoint and asserts that the
+           browser reaches it through the per-tab shim, that different tabs use different
+           isolation usernames, that <code>.onion</code> CONNECT requests are relayed, and that
+           WebRTC is removed from the page. <code>npm run test:tor</code> proves the real daemon
+           starts, authenticates over the control port and builds circuits.</p>
+
+        <h2 id="troubleshooting">Troubleshooting</h2>
+        <h3>"Tor binary not found"</h3>
+        <p>Install Tor, set <code>TOR_BINARY</code>, or run <code>npm run fetch-tor</code>. On
+           Debian/Ubuntu: <code>sudo apt install tor</code>. On macOS: <code>brew install tor</code>.</p>
+        <h3>Stuck at "Starting Tor…" / never reaches 100%</h3>
+        <p>Your network is likely blocking Tor (it uses OR ports such as 443 and 9001).</p>
+        <ul class="plain">
+          <li>Allow Tor through your firewall or proxy.</li>
+          <li>Use <strong>bridges</strong>: add bridge lines to the <code>torrc</code> at
+              <code>&lt;userData&gt;/tor-data/torrc</code> after the first run. <code>obfs4</code>
+              bridges ship inside the Expert Bundle under <code>pluggable_transports/</code>.</li>
+        </ul>
+        <h3>A specific site doesn't load</h3>
+        <p>Many sites block Tor exits or have no onion version. Errors appear in the
+           diagnostic log — click the Tor chip to expand it.</p>
+        <h3>Performance</h3>
+        <p>Traffic takes three relays around the world and is encrypted at each hop, so
+           latency is higher than a normal browser. This is inherent to Tor, not to this
+           app. Upload-heavy pages are the slowest.</p>
+        <h3>Multiple instances</h3>
+        <p>Only one instance runs at a time (a single-instance lock), so two Tor daemons or
+           control connections never race.</p>
+
+        <h2 id="limitations">Limitations</h2>
+        <p>These are real and stated up front:</p>
+        <ol class="plain">
+          <li><strong>Fingerprint resistance is partial.</strong> This build reuses Chromium via
+              Electron. Its fingerprinting surface (fonts, canvas, WebGL, audio, screen
+              metrics, TLS/HTTP stack) differs from Firefox/Gecko, and Tor Browser's
+              letterboxing and first-party isolation are not reproduced. For the strongest
+              anonymity guarantees, use the official Tor Browser.</li>
+          <li><strong>Circuit isolation is per tab, not per site.</strong> Tabs are isolated from
+              each other; there is no Firefox-style first-party isolation inside a single tab.</li>
+          <li><strong>WebRTC is disabled, not proxied.</strong> Sites that require WebRTC media
+              will not work. This is deliberate.</li>
+          <li><strong>No extensions, password manager or sync.</strong> Anything that could punch a
+              hole through the proxy is intentionally absent.</li>
+          <li><strong>The "no history" model is in-memory per session.</strong> It does not defend
+              against an attacker with access to your machine or swap; use full-disk
+              encryption.</li>
+          <li><strong>OS-level leaks are out of scope.</strong> If your OS or another app leaks
+              traffic, this browser cannot stop that. Consider a VM or Tails for high-risk use.</li>
+        </ol>
+
+        <h2 id="faq">FAQ</h2>
+        <h3>Is this the Tor Browser?</h3>
+        <p>No. It is a from-scratch Chromium (Electron) shell that uses Tor. It is not a
+           reskinned Tor Browser and does not reproduce all of its anti-fingerprinting
+           features.</p>
+        <h3>Does it cost anything?</h3>
+        <p>No. It is free and open source under the MIT license.</p>
+        <h3>Does it work without internet censorship circumvention?</h3>
+        <p>Yes — on an open network it connects directly. On restricted networks, configure
+           bridges as described above.</p>
+        <h3>Where is the source?</h3>
+        <p>On GitHub: <a href="https://github.com/itriedcoding/TorSecretBrowser" target="_blank" rel="noopener">itriedcoding/TorSecretBrowser</a>.</p>
+      </article>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a class="brand" href="/"><img src="/assets/logo.svg" alt="" width="30" height="30"> Tor Secret Browser</a>
+          <p>A hardened Electron browser that routes everything through Tor, with native .onion support and no network leaks.</p>
+        </div>
+        <div><h4>Product</h4><a href="/downloads">Download</a><a href="/documentation">Documentation</a><a href="/links">Links</a><a href="/showcase">Showcase</a></div>
+        <div><h4>Legal</h4><a href="/privacy">Privacy policy</a><a href="/terms">Terms of service</a></div>
+        <div><h4>Project</h4><a href="https://github.com/itriedcoding/TorSecretBrowser" target="_blank" rel="noopener">Source code</a><a href="https://github.com/itriedcoding/TorSecretBrowser/releases" target="_blank" rel="noopener">Releases</a><a href="https://github.com/itriedcoding/TorSecretBrowser/issues" target="_blank" rel="noopener">Report an issue</a></div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; <span id="year">2026</span> Tor Secret Browser &middot; MIT licensed</span>
+        <span>Not affiliated with the Tor Project. Tor is a trademark of the Tor Project, Inc.</span>
+      </div>
+    </div>
+  </footer>
+
+  <div id="cookie-banner" role="dialog" aria-live="polite" aria-label="Cookie notice">
+    <div class="row">
+      <p><strong>Cookies.</strong> This site sets no tracking or advertising cookies. Choosing &ldquo;Accept&rdquo; stores one preference cookie so we remember your choice; &ldquo;Decline&rdquo; records that you opted out (also as a cookie). See the <a href="/privacy">privacy policy</a>.</p>
+      <div class="actions">
+        <button class="btn" data-consent="declined">Decline</button>
+        <button class="btn btn-primary" data-consent="accepted">Accept</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/app.js" defer></script>
+</body>
+</html>

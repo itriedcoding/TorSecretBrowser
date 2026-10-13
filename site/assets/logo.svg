@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Tor Secret Browser logo">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2a1a4a"/>
+      <stop offset="1" stop-color="#7c3aed"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="512" height="512" rx="112" fill="url(#bg)"/>
+  <path d="M138 232 h236 L256 92 Z" fill="#efeaff"/>
+  <circle cx="256" cy="320" r="132" fill="#efeaff"/>
+  <g fill="none" stroke="#4c1d95" stroke-linecap="round">
+    <circle cx="256" cy="320" r="100" stroke-width="13"/>
+    <circle cx="256" cy="320" r="72" stroke-width="11"/>
+    <circle cx="256" cy="320" r="44" stroke-width="9"/>
+  </g>
+  <rect x="248" y="86" width="16" height="64" rx="8" fill="#efeaff"/>
+</svg>

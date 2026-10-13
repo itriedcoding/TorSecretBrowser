@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Clearnet &amp; .onion links — Tor Secret Browser</title>
+  <meta name="description" content="A directory of verified clearnet and .onion addresses for Tor services, plus a link checker that tells you how Tor Secret Browser will open any clearnet URL or .onion address you paste.">
+  <link rel="canonical" href="https://tor-secret-browser.vercel.app/links">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <meta name="theme-color" content="#0b0714">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="/"><img src="/assets/logo.svg" alt="" width="30" height="30"> Tor Secret Browser</a>
+      <button class="nav-toggle" aria-label="Menu" aria-expanded="false">&#9776;</button>
+      <nav class="nav-links">
+        <a href="/" data-nav>Home</a>
+        <a href="/downloads" data-nav>Download</a>
+        <a href="/documentation" data-nav>Docs</a>
+        <a href="/links" data-nav>Links</a>
+        <a href="/showcase" data-nav>Showcase</a>
+        <a href="/privacy" data-nav>Privacy</a>
+        <a href="https://github.com/itriedcoding/TorSecretBrowser" target="_blank" rel="noopener">GitHub</a>
+        <a class="nav-cta" href="/downloads">Download</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container" style="padding-top:52px;">
+    <div class="section-head">
+      <h1>Clearnet &amp; .onion links</h1>
+      <p>These are real, publicly published addresses for services that offer an
+         <code>.onion</code> mirror. The same directory ships inside the app on the
+         new-tab page, and the address bar accepts clearnet URLs, <code>.onion</code>
+         addresses and search queries interchangeably.</p>
+    </div>
+
+    <div class="note">
+      <strong>Verified addresses.</strong> Every <code>.onion</code> below is the
+      address published by the service itself and listed on the Tor Project's onion
+      index at <a href="https://onion.torproject.org/" target="_blank" rel="noopener">onion.torproject.org</a>.
+      Clearnet addresses open in any browser; <code>.onion</code> addresses only
+      resolve through Tor, so use a Tor-capable browser such as this app.
+    </div>
+
+    <!-- ================= link checker ================= -->
+    <section>
+      <div class="card" id="link-checker">
+        <h2 style="margin-top:0;">Check a link</h2>
+        <p>Paste a clearnet URL (like <code>example.com</code>) or an
+           <code>.onion</code> address and see exactly how Tor Secret Browser will
+           open it.</p>
+        <div class="link-form">
+          <input id="link-input" type="text" spellcheck="false" autocomplete="off"
+                 placeholder="example.com  or  duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion">
+          <button id="link-check" class="btn btn-primary" type="button">Check link</button>
+        </div>
+        <div id="link-result" class="link-result hidden" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- ================= Tor Project directory ================= -->
+    <section>
+      <div class="section-head">
+        <h2>Tor Project &mdash; clearnet &amp; onion</h2>
+        <p>Official Tor Project sites. Each has a matching onion service.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Service</th><th>Clearnet</th><th>.onion</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>Tor Project</strong></td>
+              <td><a href="https://www.torproject.org/" target="_blank" rel="noopener">www.torproject.org</a></td>
+              <td><code id="onion-torproject">2gzyxa5ihm7nsggfxnu52rck2vv4rvmdlkiu3zzui5du4xyclen53wid.onion</code>
+                  <button class="copy-mini" type="button" data-copy="#onion-torproject" title="Copy onion address">Copy</button></td>
+            </tr>
+            <tr>
+              <td><strong>Support</strong></td>
+              <td><a href="https://support.torproject.org/" target="_blank" rel="noopener">support.torproject.org</a></td>
+              <td><code id="onion-support">rzuwtpc4wb3xdzrj3yeajsvm3fkq4vbeubm2tdxaqruzzzgs5dwemlad.onion</code>
+                  <button class="copy-mini" type="button" data-copy="#onion-support" title="Copy onion address">Copy</button></td>
+            </tr>
+            <tr>
+              <td><strong>Blog</strong></td>
+              <td><a href="https://blog.torproject.org/" target="_blank" rel="noopener">blog.torproject.org</a></td>
+              <td><code id="onion-blog">pzhdfe7jraknpj2qgu5cz2u3i4deuyfwmonvzu5i3nyw4t4bmg7o5pad.onion</code>
+                  <button class="copy-mini" type="button" data-copy="#onion-blog" title="Copy onion address">Copy</button></td>
+            </tr>
+            <tr>
+              <td><strong>Browser Manual</strong></td>
+              <td><a href="https://tb-manual.torproject.org/" target="_blank" rel="noopener">tb-manual.torproject.org</a></td>
+              <td><code id="onion-manual">dsbqrprgkqqifztta6h3w7i2htjhnq7d3qkh3c7gvc35e66rrcv66did.onion</code>
+                  <button class="copy-mini" type="button" data-copy="#onion-manual" title="Copy onion address">Copy</button></td>
+            </tr>
+            <tr>
+              <td><strong>Community</strong></td>
+              <td><a href="https://community.torproject.org/" target="_blank" rel="noopener">community.torproject.org</a></td>
+              <td><code id="onion-community">xmrhfasfg5suueegrnc4gsgyi2tyclcy5oz7f5drnrodmdtob6t2ioyd.onion</code>
+                  <button class="copy-mini" type="button" data-copy="#onion-community" title="Copy onion address">Copy</button></td>
+            </tr>
+            <tr>
+              <td><strong>Forum</strong></td>
+              <td><a href="https://forum.torproject.org/" target="_blank" rel="noopener">forum.torproject.org</a></td>
+              <td><code id="onion-forum">v236xhqtyullodhf26szyjepvkbv6iitrhjgrqj4avaoukebkk6n6syd.onion</code>
+                  <button class="copy-mini" type="button" data-copy="#onion-forum" title="Copy onion address">Copy</button></td>
+            </tr>
+            <tr>
+              <td><strong>Metrics</strong></td>
+              <td><a href="https://metrics.torproject.org/" target="_blank" rel="noopener">metrics.torproject.org</a></td>
+              <td><code id="onion-metrics">hctxrvjzfpvmzh2jllqhgvvkoepxb4kfzdjm6h7egcwlumggtktiftid.onion</code>
+                  <button class="copy-mini" type="button" data-copy="#onion-metrics" title="Copy onion address">Copy</button></td>
+            </tr>
+            <tr>
+              <td><strong>GitLab</strong></td>
+              <td><a href="https://gitlab.torproject.org/" target="_blank" rel="noopener">gitlab.torproject.org</a></td>
+              <td><code id="onion-gitlab">eweiibe6tdjsdprb4px6rqrzzcsi22m4koia44kc5pcjr7nec2rlxyad.onion</code>
+                  <button class="copy-mini" type="button" data-copy="#onion-gitlab" title="Copy onion address">Copy</button></td>
+            </tr>
+            <tr>
+              <td><strong>ExoneraTor</strong></td>
+              <td><a href="https://exonerator.torproject.org/" target="_blank" rel="noopener">exonerator.torproject.org</a></td>
+              <td><code id="onion-exonerator">pm46i5h2lfewyx6l7pnicbxhts2sxzacvsbmqiemqaspredf2gm3dpad.onion</code>
+                  <button class="copy-mini" type="button" data-copy="#onion-exonerator" title="Copy onion address">Copy</button></td>
+            </tr>
+            <tr>
+              <td><strong>Snowflake</strong></td>
+              <td><a href="https://snowflake.torproject.org/" target="_blank" rel="noopener">snowflake.torproject.org</a></td>
+              <td><code id="onion-snowflake">oljlphash3bpqtrvqpr5gwzrhroziw4mddidi5d2qa4qjejcbrmoypqd.onion</code>
+                  <button class="copy-mini" type="button" data-copy="#onion-snowflake" title="Copy onion address">Copy</button></td>
+            </tr>
+            <tr>
+              <td><strong>Onion Services</strong></td>
+              <td><a href="https://onionservices.torproject.org/" target="_blank" rel="noopener">onionservices.torproject.org</a></td>
+              <td><code id="onion-onionservices">ttevhhjjsjxz6uqqcjkbig5cycd7n7xv7cmd6f5fcvrqaaa7f3bj36wad.onion</code>
+                  <button class="copy-mini" type="button" data-copy="#onion-onionservices" title="Copy onion address">Copy</button></td>
+            </tr>
+            <tr>
+              <td><strong>Onion list</strong></td>
+              <td><a href="https://onion.torproject.org/" target="_blank" rel="noopener">onion.torproject.org</a></td>
+              <td><code id="onion-onionlist">xao2lxsmia2edq2n5zxg6uahx6xox2t7bfjw6b5vdzsxi7ezmqob6qid.onion</code>
+                  <button class="copy-mini" type="button" data-copy="#onion-onionlist" title="Copy onion address">Copy</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= Popular services ================= -->
+    <section>
+      <div class="section-head">
+        <h2>Popular clearnet &amp; onion services</h2>
+        <p>Well-known sites that publish their own onion mirror.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Service</th><th>Clearnet</th><th>.onion</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>DuckDuckGo</strong></td>
+              <td><a href="https://duckduckgo.com/" target="_blank" rel="noopener">duckduckgo.com</a></td>
+              <td><code id="onion-duckduckgo">duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion</code>
+                  <button class="copy-mini" type="button" data-copy="#onion-duckduckgo" title="Copy onion address">Copy</button></td>
+            </tr>
+            <tr>
+              <td><strong>Facebook</strong></td>
+              <td><a href="https://www.facebook.com/" target="_blank" rel="noopener">facebook.com</a></td>
+              <td><code id="onion-facebook">facebookwkhpilnemxj7asaniu7vnjjbiltxjqhye3mhbshg7kx5tfyd.onion</code>
+                  <button class="copy-mini" type="button" data-copy="#onion-facebook" title="Copy onion address">Copy</button></td>
+            </tr>
+            <tr>
+              <td><strong>Proton Mail</strong></td>
+              <td><a href="https://proton.me/" target="_blank" rel="noopener">proton.me</a></td>
+              <td><code id="onion-proton">protonmailrmez3lotccipshtkleegetolb73fuirgj7r4o4vfu7ozyd.onion</code>
+                  <button class="copy-mini" type="button" data-copy="#onion-proton" title="Copy onion address">Copy</button></td>
+            </tr>
+            <tr>
+              <td><strong>Tails</strong></td>
+              <td><a href="https://tails.net/" target="_blank" rel="noopener">tails.net</a></td>
+              <td><code id="onion-tails">tzoz3bensgxyzs7da7lpgsn3a74h7hlbm4wa6ytq2tg6ktd57w22vqqd.onion</code>
+                  <button class="copy-mini" type="button" data-copy="#onion-tails" title="Copy onion address">Copy</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= How links open ================= -->
+    <section>
+      <div class="section-head">
+        <h2>How links open in Tor Secret Browser</h2>
+        <p>There is one input for everything. The new-tab page has an
+           <strong>Open a link</strong> box, and the toolbar has the address bar; both
+           accept the same inputs.</p>
+      </div>
+      <div class="grid grid-2">
+        <div class="card">
+          <h3>Clearnet URL</h3>
+          <p>Enter <code>example.com</code> or a full <code>https://</code> URL. The
+             request is sent through the local Tor daemon just like any other page, so
+             the site you reach sees a Tor exit node &mdash; not you.</p>
+        </div>
+        <div class="card">
+          <h3>.onion address</h3>
+          <p>Paste the whole 56-character <code>&hellip;.onion</code> name. Tor resolves
+             it directly and the page loads over the same SOCKS5 channel. No extensions
+             or settings to enable.</p>
+        </div>
+        <div class="card">
+          <h3>Search query</h3>
+          <p>Type plain words and press Enter. They are sent to DuckDuckGo's
+             <code>.onion</code> search service, so even the search is performed over
+             Tor.</p>
+        </div>
+        <div class="card">
+          <h3>Copy from this page</h3>
+          <p>Every <code>.onion</code> address above has a <strong>Copy</strong> button.
+             Copy it, then paste it into the app's address bar or the new-tab
+             <strong>Open a link</strong> box.</p>
+        </div>
+      </div>
+      <div class="note">
+        <strong>Why not clickable onion links here?</strong> A normal browser outside
+        Tor cannot resolve <code>.onion</code> names, and clicking one would only show a
+        connection error. Copying the address and using the app is the reliable path.
+      </div>
+    </section>
+
+    <section>
+      <div class="card" style="text-align:center;padding:40px 24px;background:linear-gradient(135deg,rgba(139,92,246,.18),rgba(168,85,247,.05));">
+        <h2 style="margin-top:0;">Open these over Tor</h2>
+        <p style="max-width:56ch;margin:0 auto 22px;">Download Tor Secret Browser and paste any of these addresses straight into it.</p>
+        <a class="btn btn-primary btn-lg" href="/downloads" data-recommend-link>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+          Download for <span data-recommend-name>Windows</span>
+        </a>
+        <p style="margin-top:14px;font-size:.85rem;" data-recommend><span data-recommend-note></span></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a class="brand" href="/"><img src="/assets/logo.svg" alt="" width="30" height="30"> Tor Secret Browser</a>
+          <p>A hardened Electron browser that routes everything through Tor, with native .onion support and no network leaks.</p>
+        </div>
+        <div>
+          <h4>Product</h4>
+          <a href="/downloads">Download</a>
+          <a href="/documentation">Documentation</a>
+          <a href="/links">Links</a>
+          <a href="/showcase">Showcase</a>
+        </div>
+        <div>
+          <h4>Legal</h4>
+          <a href="/privacy">Privacy policy</a>
+          <a href="/terms">Terms of service</a>
+        </div>
+        <div>
+          <h4>Project</h4>
+          <a href="https://github.com/itriedcoding/TorSecretBrowser" target="_blank" rel="noopener">Source code</a>
+          <a href="https://github.com/itriedcoding/TorSecretBrowser/releases" target="_blank" rel="noopener">Releases</a>
+          <a href="https://github.com/itriedcoding/TorSecretBrowser/issues" target="_blank" rel="noopener">Report an issue</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; <span id="year">2026</span> Tor Secret Browser &middot; MIT licensed</span>
+        <span>Not affiliated with the Tor Project. Tor is a trademark of the Tor Project, Inc.</span>
+      </div>
+    </div>
+  </footer>
+
+  <div id="cookie-banner" role="dialog" aria-live="polite" aria-label="Cookie notice">
+    <div class="row">
+      <p><strong>Cookies.</strong> This site sets no tracking or advertising cookies. Choosing &ldquo;Accept&rdquo; stores one preference cookie so we remember your choice; &ldquo;Decline&rdquo; records that you opted out (also as a cookie). See the <a href="/privacy">privacy policy</a>.</p>
+      <div class="actions">
+        <button class="btn" data-consent="declined">Decline</button>
+        <button class="btn btn-primary" data-consent="accepted">Accept</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/app.js" defer></script>
+</body>
+</html>

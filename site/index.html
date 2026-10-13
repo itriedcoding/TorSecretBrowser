@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tor Secret Browser — a hardened Tor browser with native .onion support</title>
+  <meta name="description" content="Tor Secret Browser is a small, hardened Electron browser that routes all of its traffic — including DNS — through the Tor network, with native .onion support and no network leaks. Free, open source, for Windows, macOS and Linux.">
+  <link rel="canonical" href="https://tor-secret-browser.vercel.app/">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <meta name="theme-color" content="#0b0714">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Tor Secret Browser">
+  <meta property="og:description" content="A hardened Electron browser that routes everything through Tor, with native .onion support and no network leaks.">
+  <meta property="og:image" content="/assets/logo.svg">
+  <meta name="twitter:card" content="summary">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="/">
+        <img src="/assets/logo.svg" alt="" width="30" height="30">
+        Tor Secret Browser
+      </a>
+      <button class="nav-toggle" aria-label="Menu" aria-expanded="false">&#9776;</button>
+      <nav class="nav-links">
+        <a href="/" data-nav>Home</a>
+        <a href="/downloads" data-nav>Download</a>
+        <a href="/documentation" data-nav>Docs</a>
+        <a href="/links" data-nav>Links</a>
+        <a href="/showcase" data-nav>Showcase</a>
+        <a href="/privacy" data-nav>Privacy</a>
+        <a href="https://github.com/itriedcoding/TorSecretBrowser" target="_blank" rel="noopener">GitHub</a>
+        <a class="nav-cta" href="/downloads">Download</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-grid">
+        <div>
+          <span class="eyebrow">&#9679; Free &amp; open source &middot; MIT</span>
+          <h1>Private browsing, routed through Tor.</h1>
+          <p class="lead">
+            Tor Secret Browser is a small, hardened Electron browser whose only way
+            out to the network is the local Tor daemon it launches and manages for
+            you. Every tab is proxied, DNS is resolved inside Tor, and <code>.onion</code>
+            addresses just work.
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary btn-lg" href="/downloads" data-recommend-link>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+              Download for <span data-recommend-name>Windows</span>
+            </a>
+            <a class="btn btn-lg" href="/documentation">Read the docs</a>
+          </div>
+          <p style="margin-top:16px;font-size:.86rem;" data-recommend>
+            <span data-recommend-note>Direct from the latest GitHub release</span>
+          </p>
+        </div>
+        <div class="hero-art">
+          <img src="/assets/logo.svg" alt="Tor Secret Browser" width="330" height="330">
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="section-head">
+          <h2>What it actually does</h2>
+          <p>No marketing fluff — this is a from-scratch Chromium shell, not a reskinned
+             Tor Browser. Here is precisely how each guarantee is implemented.</p>
+        </div>
+        <div class="grid grid-3">
+          <div class="card">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/></svg></div>
+            <h3>All traffic through Tor</h3>
+            <p>Every tab session is forced to <code>socks5://127.0.0.1</code> with <code>proxyBypassRules: '&lt;-loopback&gt;'</code>. Chromium's SOCKS5 uses remote DNS, so hostnames are resolved by Tor, not by you.</p>
+          </div>
+          <div class="card">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Z"/><path d="m8 12 3 3 5-6"/></svg></div>
+            <h3>Native .onion support</h3>
+            <p>Onion names are resolved by Tor over the same SOCKS5 channel. Paste any onion address and it loads — no extensions, no extra configuration.</p>
+          </div>
+          <div class="card">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3l7 4v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V7Z"/><path d="M9.5 12.5l1.8 1.8 3.4-3.9"/></svg></div>
+            <h3>No DNS or WebRTC leaks</h3>
+            <p>The generated <code>torrc</code> sets <code>SafeSocks 1</code>, and the process runs with WebRTC forced to <code>disable_non_proxied_udp</code>. Tor carries no UDP, so WebRTC cannot escape.</p>
+          </div>
+          <div class="card">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div>
+            <h3>Circuit isolation per tab</h3>
+            <p>Each tab gets its own in-memory session and its own local SOCKS5 relay that injects unique credentials, so distinct tabs get distinct Tor circuits.</p>
+          </div>
+          <div class="card">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg></div>
+            <h3>Privacy by default</h3>
+            <p>No telemetry switches, no persistent profile. Partitions are created without the <code>persist:</code> prefix, so cookies, cache and storage live only in memory for the tab's lifetime.</p>
+          </div>
+          <div class="card">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><circle cx="12" cy="12" r="4"/></svg></div>
+            <h3>One-click New Identity</h3>
+            <p>"New Identity" sends <code>SIGNAL NEWNYM</code> to Tor, rotates each tab's SOCKS credentials and drops all per-tab storage, giving you fresh circuits.</p>
+          </div>
+          <div class="card">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 15l6-6"/><path d="M11 6l1-1a4 4 0 0 1 6 6l-1 1"/><path d="M13 18l-1 1a4 4 0 0 1-6-6l1-1"/></svg></div>
+            <h3>Clearnet + onion directory</h3>
+            <p>The new-tab page ships a verified directory of Tor Project and popular
+               clearnet/<code>.onion</code> addresses, each with a copy button, plus a
+               paste-to-open box. The same list lives on the <a href="/links">Links page</a>.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="section-head">
+          <h2>How it works</h2>
+          <p>The browser UI and the Tor process are cleanly separated. The renderer only
+             speaks to the main process over a narrow, explicitly-listed IPC bridge.</p>
+        </div>
+        <pre><code>+---------------------------------------------------------------+
+|  Electron main process (Node.js)                              |
+|                                                               |
+|   index.js  ------------.                                     |
+|      |  applies privacy switches, owns windows &amp; IPC         |
+|      +-- tor-manager.js  |  spawns + supervises the tor daemon|
+|      |      '-- tor-control.js  (Tor control protocol client) |
+|      +-- privacy.js      |  proxy rules, leak guards, injected|
+|      |                   |  hardening script                  |
+|      +-- socks-shim.js   |  per-tab SOCKS5 relay -&gt; Tor creds |
+|      +-- paths.js        |  finds the tor binary              |
+|      '-- tabs.js         |  one WebContentsView + isolated    |
+|                          |  session per tab                  |
+|                                                               |
+|   IPC (contextBridge)                                         |
+|      v chrome-preload.js        v tab-preload.js             |
+|   renderer/ (tab strip,      web pages (isolated, sandboxed,  |
+|   toolbar, status overlay)    proxied, WebRTC stripped)       |
++---------------------------------------------------------------+
+        | (loopback only)         | (loopback only)
+        v                         v
+  [ SocksShim per tab ] --&gt; [ tor daemon ] --&gt; Tor network (3 hops)</code></pre>
+        <div class="note">
+          <strong>Why the per-tab relay?</strong> Chromium rejects credentials embedded
+          in a proxy rule string and silently installs no proxy at all. Each tab
+          therefore points at its own loopback relay, which accepts plain SOCKS5 from
+          Chromium and re-issues the request to Tor with that tab's unique username and
+          password — making per-tab circuit isolation reliable.
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="section-head">
+          <h2>Enter any clearnet or .onion link</h2>
+          <p>The new-tab page has one box for everything: paste a clearnet URL, a
+             <code>.onion</code> address or a plain search query and it opens through Tor.
+             Below is a real capture of the running app.</p>
+        </div>
+        <div class="grid grid-2" style="align-items:center;">
+          <div class="shot">
+            <div class="bar"><i></i><i></i><i></i><span class="url">Tor Secret Browser &mdash; new tab</span></div>
+            <div class="body" style="padding:0;">
+              <img src="/assets/screenshot-start.png" width="1300" height="820" loading="lazy"
+                   alt="The Tor Secret Browser new-tab page: an Open a link box, the Tor Project clearnet and onion directory, and copy buttons on every onion address."
+                   style="display:block;width:100%;height:auto;">
+            </div>
+          </div>
+          <div>
+            <ul class="checks">
+              <li><strong>One input for everything.</strong> Clearnet URLs,
+                  <code>.onion</code> addresses and plain search queries all work in the same box.</li>
+              <li><strong>Verified addresses.</strong> Every onion entry is the address the
+                  service publishes and lists on the Tor Project's onion index.</li>
+              <li><strong>Copy in one click.</strong> Every onion address has a copy button for the address bar.</li>
+              <li><strong>Browse the directory here.</strong> The full list is also on the
+                  <a href="/links">Links page</a>, with a checker that shows how a link opens.</li>
+            </ul>
+            <p style="margin-top:18px;"><a class="btn btn-primary" href="/links">Browse the link directory</a></p>
+          </div>
+        </div>
+        <p class="caption">Real screenshot captured from the running application.</p>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="section-head">
+          <h2>Honest limitations</h2>
+          <p>These are real and stated up front. If you need the strongest anonymity
+             guarantees, use the official Tor Browser.</p>
+        </div>
+        <div class="grid grid-2">
+          <div class="note warn"><strong>Fingerprint resistance is partial.</strong> This build reuses Chromium via Electron. Its fingerprinting surface differs from Firefox/Gecko, and Tor Browser's letterboxing and first-party isolation are not reproduced.</div>
+          <div class="note warn"><strong>Isolation is per tab, not per site.</strong> Tabs are isolated from each other; there is no first-party isolation inside a single tab.</div>
+          <div class="note warn"><strong>WebRTC is disabled, not proxied.</strong> Sites that require WebRTC media will not work. This is deliberate.</div>
+          <div class="note warn"><strong>No extensions, password manager or sync.</strong> Anything that could punch a hole through the proxy is intentionally absent.</div>
+        </div>
+        <p style="margin-top:18px;">
+          <a href="/documentation#limitations">Read the full list of limitations &rarr;</a>
+        </p>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="card" style="text-align:center;padding:40px 24px;background:linear-gradient(135deg,rgba(139,92,246,.18),rgba(168,85,247,.05));">
+          <h2 style="margin-top:0;">Get it for your platform</h2>
+          <p style="max-width:56ch;margin:0 auto 22px;">Free installers for Windows, macOS and Linux, bundled with the official Tor Expert Bundle so it works out of the box.</p>
+          <a class="btn btn-primary btn-lg" href="/downloads" data-recommend-link>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+            Download for <span data-recommend-name>Windows</span>
+          </a>
+          <p style="margin-top:14px;font-size:.85rem;" data-recommend><span data-recommend-note></span></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a class="brand" href="/"><img src="/assets/logo.svg" alt="" width="30" height="30"> Tor Secret Browser</a>
+          <p>A hardened Electron browser that routes everything through Tor, with native .onion support and no network leaks.</p>
+        </div>
+        <div>
+          <h4>Product</h4>
+          <a href="/downloads">Download</a>
+          <a href="/documentation">Documentation</a>
+          <a href="/links">Links</a>
+          <a href="/showcase">Showcase</a>
+        </div>
+        <div>
+          <h4>Legal</h4>
+          <a href="/privacy">Privacy policy</a>
+          <a href="/terms">Terms of service</a>
+        </div>
+        <div>
+          <h4>Project</h4>
+          <a href="https://github.com/itriedcoding/TorSecretBrowser" target="_blank" rel="noopener">Source code</a>
+          <a href="https://github.com/itriedcoding/TorSecretBrowser/releases" target="_blank" rel="noopener">Releases</a>
+          <a href="https://github.com/itriedcoding/TorSecretBrowser/issues" target="_blank" rel="noopener">Report an issue</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; <span id="year">2026</span> Tor Secret Browser &middot; MIT licensed</span>
+        <span>Not affiliated with the Tor Project. Tor is a trademark of the Tor Project, Inc.</span>
+      </div>
+    </div>
+  </footer>
+
+  <div id="cookie-banner" role="dialog" aria-live="polite" aria-label="Cookie notice">
+    <div class="row">
+      <p><strong>Cookies.</strong> This site sets no tracking or advertising cookies. Choosing &ldquo;Accept&rdquo; stores one preference cookie so we remember your choice; &ldquo;Decline&rdquo; records that you opted out (also as a cookie). See the <a href="/privacy">privacy policy</a>.</p>
+      <div class="actions">
+        <button class="btn" data-consent="declined">Decline</button>
+        <button class="btn btn-primary" data-consent="accepted">Accept</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/app.js" defer></script>
+</body>
+</html>

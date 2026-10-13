@@ -26,6 +26,7 @@ and manages for you.
 | **No WebSocket/protocol escape** | `ws:`/`wss:` go through the proxy; every other scheme (`ftp:`, custom app URIs, …) is cancelled by a `webRequest` filter. |
 | **Circuit isolation** | Each tab gets its own in-memory session partition **and** its own local SOCKS5 relay (`socks-shim.js`) that injects unique credentials toward Tor. With Tor's `IsolateSOCKSAuth`, distinct credentials ⇒ distinct circuits. |
 | **Privacy by default** | No telemetry switches, no persistent profile: partitions are created without the `persist:` prefix, so cookies/cache/storage live only in memory for the tab's lifetime. "New Identity" calls `SIGNAL NEWNYM` and drops all per-tab storage. |
+| **Clearnet + onion directory** | The new-tab page ships a verified directory of Tor Project and popular clearnet/`.onion` addresses, an "Open a link" box that accepts a clearnet URL, a `.onion` address or a search query, and a copy button on every onion address. The same directory is published on the website's Links page. |
 | **Fingerprint resistance** | One common user agent for everyone, navigator smoothing, WebRTC removed. (See limitations — this is *partial*.) |
 
 ---
@@ -103,8 +104,10 @@ npm start
 ```
 
 On first run the app prints Tor's log to the overlay, shows bootstrap progress,
-and once it reaches 100% you can paste any `onion` address into the address bar.
-Nothing else is required.
+and once it reaches 100% the new-tab page appears with an **Open a link** box and a
+built-in clearnet/`.onion` directory. Paste any URL, `.onion` address or search
+query there — or into the toolbar address bar — and it opens through Tor. Nothing
+else is required.
 
 ### Where Tor keeps its state
 
