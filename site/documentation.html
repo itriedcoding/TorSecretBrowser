@@ -20,7 +20,7 @@
         <a href="/downloads" data-nav>Download</a>
         <a href="/documentation" data-nav>Docs</a>
         <a href="/links" data-nav>Links</a>
-        <a href="/showcase" data-nav>Showcase</a>
+        <a href="/scan" data-nav>Scan</a>
         <a href="/privacy" data-nav>Privacy</a>
         <a href="https://github.com/itriedcoding/TorSecretBrowser" target="_blank" rel="noopener">GitHub</a>
         <a class="nav-cta" href="/downloads">Download</a>
@@ -40,6 +40,7 @@
         <a href="#getting-started">Getting started</a>
         <a href="#using">Using the browser</a>
         <a href="#links">Link directory</a>
+        <a href="#scanner">File scanner</a>
         <a href="#privacy">How privacy works</a>
         <a href="#onion">Onion services</a>
         <a href="#identity">New Identity</a>
@@ -99,6 +100,19 @@
         <p>The same directory is published on this site at <a href="/links">Links</a>,
            together with a checker that tells you exactly how a given link will be
            opened.</p>
+
+        <h2 id="scanner">File scanner</h2>
+        <p>The site includes an on-device file scanner at <a href="/scan">Scan</a>. It
+           inspects any file entirely in your browser: it computes the SHA-256 and SHA-1
+           hashes, identifies the true file type from its magic bytes and flags mismatches
+           with the extension, lists executables and scripts hidden inside ZIP archives, and
+           reports suspicious content patterns such as encoded PowerShell, download-and-run
+           commands and Office macros. The file is read locally and never uploaded.</p>
+        <p>Because the published SHA-256 values of the release installers are embedded in the
+           scanner, dragging in a downloaded <code>TorSecretBrowser-*</code> file will confirm
+           whether it is byte-for-byte the file we published. The scanner is a heuristic and
+           integrity tool, not a malware-database antivirus, so a clean result is not a
+           guarantee of safety.</p>
 
         <h2 id="privacy">How privacy works</h2>
         <div class="table-wrap">
@@ -253,7 +267,7 @@ npm run test:tor       # launches real Tor, waits for bootstrap, then NEWNYM</co
           <a class="brand" href="/"><img src="/assets/logo.svg" alt="" width="30" height="30"> Tor Secret Browser</a>
           <p>A hardened Electron browser that routes everything through Tor, with native .onion support and no network leaks.</p>
         </div>
-        <div><h4>Product</h4><a href="/downloads">Download</a><a href="/documentation">Documentation</a><a href="/links">Links</a><a href="/showcase">Showcase</a></div>
+        <div><h4>Product</h4><a href="/downloads">Download</a><a href="/documentation">Documentation</a><a href="/links">Links</a><a href="/scan">Scan files</a></div>
         <div><h4>Legal</h4><a href="/privacy">Privacy policy</a><a href="/terms">Terms of service</a></div>
         <div><h4>Project</h4><a href="https://github.com/itriedcoding/TorSecretBrowser" target="_blank" rel="noopener">Source code</a><a href="https://github.com/itriedcoding/TorSecretBrowser/releases" target="_blank" rel="noopener">Releases</a><a href="https://github.com/itriedcoding/TorSecretBrowser/issues" target="_blank" rel="noopener">Report an issue</a></div>
       </div>
