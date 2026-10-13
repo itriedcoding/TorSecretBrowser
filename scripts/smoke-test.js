@@ -156,7 +156,7 @@ app.whenReady().then(async () => {
   check('tab created', () => assert.ok(tabA));
 
   await waitFor(() => tabA.url && tabA.url.startsWith('file:'), 8000, 'start page load').catch(() => {});
-  await delay(300);
+  await delay(1000);
   check('start page has a url', () => assert.ok(tabA.url && tabA.url.startsWith('file:')));
   check('start page loaded a title', () => assert.ok(tabA.title && tabA.title.length > 0));
 

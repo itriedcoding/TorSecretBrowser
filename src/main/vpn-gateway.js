@@ -143,9 +143,20 @@ class VpnGateway extends EventEmitter {
     this._track(clientSocket);
     this._track(upstream);
 
-    clientSocket.write('HTTP/1.1 200 Connection Established\r\n\r\n');
-    if (head && head.length) upstream.write(head);
-    if (tunnel.leftover && tunnel.leftover.length) clientSocket.write(tunnel.leftover);
+    try {
+      clientSocket.write('HTTP/1.1 200 Connection Established\r\n\r\n');
+      if (head && head.length) upstream.write(head);
+      if (tunnel.leftover && tunnel.leftover.length) clientSocket.write(tunnel.leftover);
+    } catch (_) {
+      // Either side went away mid-handshake; drop both halves quietly.
+      try {
+        clientSocket.destroy();
+      } catch (_) {}
+      try {
+        upstream.destroy();
+      } catch (_) {}
+      return;
+    }
     clientSocket.pipe(upstream);
     upstream.pipe(clientSocket);
   }

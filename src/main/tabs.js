@@ -220,6 +220,7 @@ class TabManager extends EventEmitter {
       if (code === -3) return;
       tab.loading = false;
       tab.error = `${desc} (${code})`;
+      this.emit('log', `page failed to load: ${desc} (${code}) url=${validatedURL}`);
       refresh();
     });
     wc.on('render-process-gone', (_e, details) => {

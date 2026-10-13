@@ -39,6 +39,7 @@ const els = {
   pageNotice: document.getElementById('page-notice'),
   pageNoticeText: document.getElementById('page-notice-text'),
   pageNoticeRetry: document.getElementById('page-notice-retry'),
+  pageNoticeIdentity: document.getElementById('page-notice-identity'),
   pageNoticeClose: document.getElementById('page-notice-close'),
   vpnBtn: document.getElementById('vpn-btn'),
   vpnPanel: document.getElementById('vpn-panel'),
@@ -212,6 +213,7 @@ function renderPageNotice() {
   els.pageNotice.classList.toggle('error', isError);
   els.pageNotice.classList.toggle('pending', !isError);
   els.pageNoticeRetry.classList.toggle('hidden', !showRetry);
+  els.pageNoticeIdentity.classList.toggle('hidden', !showRetry);
   els.pageNotice.classList.remove('hidden');
   els.viewport.style.top = 84 + els.pageNotice.offsetHeight + 'px';
   syncBounds();
@@ -521,6 +523,29 @@ els.pageNoticeRetry.addEventListener('click', () => {
   api.navigate(tab.id, tab.url || '');
   renderPageNotice();
 });
+els.pageNoticeIdentity.addEventListener('click', async () => {
+  // A bad guard or circuit fails every load the same way; fresh circuits
+  // before the retry genuinely fix that class of failure.
+  const tab = activeTab();
+  if (!tab) return;
+  state.dismissed = { id: null, text: null };
+  els.pageNoticeIdentity.disabled = true;
+  els.pageNoticeIdentity.textContent = 'Getting new identity…';
+  try {
+    await api.newIdentity();
+  } catch (_) {}
+  els.pageNoticeIdentity.disabled = false;
+  els.pageNoticeIdentity.textContent = 'New identity & retry';
+  api.navigate(tab.id, tab.url || '');
+  renderPageNotice();
+});
+
+/* Slow loads produce no tab events while they crawl, so re-evaluate on a
+ * timer — otherwise the "still loading" notice would never appear. */
+setInterval(() => {
+  const tab = activeTab();
+  if (tab && tab.loading && !tab.error && !tab.pending) renderPageNotice();
+}, 5000);
 
 /* --- VPN / gateway ----------------------------------------------------- */
 els.vpnBtn.addEventListener('click', () => {

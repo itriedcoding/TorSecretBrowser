@@ -26,7 +26,7 @@ and manages for you.
 | **No WebSocket/protocol escape** | `ws:`/`wss:` go through the proxy; every other scheme (`ftp:`, custom app URIs, …) is cancelled by a `webRequest` filter. |
 | **Circuit isolation** | Each tab gets its own in-memory session partition **and** its own local SOCKS5 relay (`socks-shim.js`) that injects unique credentials toward Tor. With Tor's `IsolateSOCKSAuth`, distinct credentials ⇒ distinct circuits. |
 | **Privacy by default** | No telemetry switches, no persistent profile: partitions are created without the `persist:` prefix, so cookies/cache/storage live only in memory for the tab's lifetime. "New Identity" calls `SIGNAL NEWNYM` and drops all per-tab storage. |
-| **Clearnet + onion directory** | The new-tab page ships a verified directory of Tor Project and popular clearnet/`.onion` addresses, an "Open a link" box that accepts a clearnet URL, a `.onion` address or a search query, and a copy button on every onion address. The same directory is published on the website's Links page. |
+| **Clearnet + onion directory** | The new-tab page ships a verified directory of Tor Project and popular clearnet/`.onion` addresses, an "Open a link" box that accepts a clearnet URL, a `.onion` address or a search query, and a copy button on every onion address. The same directory is published on the website's Links page. Every listed `.onion` is verified reachable through Tor before each release; dead ones are removed instead of left to fail. |
 | **Automatic updates** | `src/main/updater.js` keeps installed builds current. Version checks and downloads are routed through the app's own Tor SOCKS proxy (`autoUpdater.netSession.setProxy`), so update traffic never touches the clearnet. Windows/Linux download and install in place; unsigned macOS builds detect the new version and link to the download page instead of faking an install. |
 | **Built-in Tor gateway ("VPN")** | `src/main/vpn-gateway.js` exposes a Tor-routed **SOCKS5** endpoint and an **HTTP CONNECT** endpoint on loopback, so other applications can be pointed at Tor without configuring Tor themselves. It is honestly a *gateway*, not a commercial VPN: there are no third-party servers and it is TCP-only. An opt-in toggle (`system-proxy.js`) can additionally point the OS proxy at it, and it is reverted automatically on quit. |
 | **No silent blank pages** | Navigation to the network is held until Tor has fully bootstrapped, and any load failure (or the pending state) is shown in a banner with the real error and a Retry button — instead of an unexplained blank page. |
@@ -169,7 +169,8 @@ Many sites block Tor exits or don't have an onion version. A failed load now
 shows a red banner with the exact error (e.g. `ERR_SOCKS_CONNECTION_FAILED`,
 `ERR_TIMED_OUT`) and a Retry button, and the diagnostic log is under the Tor
 chip. If Tor is still bootstrapping, the page is held and labelled rather than
-left blank.
+left blank. If every load fails the same way, use **New identity & retry** in the
+banner: a bad guard or circuit fails identically until you get fresh circuits.
 
 **Does the built-in gateway route other apps?**
 Open the shield button in the toolbar. Once Tor is up, a loopback **SOCKS5** and

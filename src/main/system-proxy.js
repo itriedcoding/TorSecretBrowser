@@ -185,10 +185,20 @@ class SystemProxy {
   async enable(host, port) {
     if (this.enabled) return { enabled: true };
     const backupOut = {};
-    if (process.platform === 'win32') await applyWindows(host, port, backupOut);
-    else if (process.platform === 'darwin') await applyMac(host, port, backupOut);
-    else if (process.platform === 'linux') await applyLinux(host, port, backupOut);
-    else throw new Error(`System proxy is not supported on ${process.platform}`);
+    try {
+      if (process.platform === 'win32') await applyWindows(host, port, backupOut);
+      else if (process.platform === 'darwin') await applyMac(host, port, backupOut);
+      else if (process.platform === 'linux') await applyLinux(host, port, backupOut);
+      else throw new Error(`System proxy is not supported on ${process.platform}`);
+    } catch (err) {
+      // Never leave a half-applied proxy behind: restore whatever we changed.
+      try {
+        if (process.platform === 'win32') await revertWindows(backupOut.windows);
+        else if (process.platform === 'darwin') await revertMac(backupOut.mac);
+        else if (process.platform === 'linux') await revertLinux(backupOut.linux);
+      } catch (_) {}
+      throw err;
+    }
     this.backup = backupOut;
     this.enabled = true;
     try {

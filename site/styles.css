@@ -558,6 +558,7 @@ ul.plain { color: var(--muted); }
 }
 .copy-mini:hover { border-color: var(--primary); background: rgba(139,92,246,.08); text-decoration: none; }
 td code { overflow-wrap: anywhere; }
+.onion-off { color: var(--muted, #8a8a96); font-size: 0.85rem; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
