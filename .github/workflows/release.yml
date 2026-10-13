@@ -20,6 +20,18 @@ jobs:
   build:
     name: ${{ matrix.label }}
     runs-on: ${{ matrix.os }}
+    # Optional code-signing credentials. Empty unless the repository secrets
+    # exist; the steps below activate signing/notarization only when set.
+    # (Mapped through env because the `secrets` context is not allowed in
+    # step-level `if:` conditions.)
+    env:
+      TSB_WIN_PFX: ${{ secrets.WIN_CERT_PFX_BASE64 }}
+      TSB_WIN_PASS: ${{ secrets.WIN_CERT_PASSWORD }}
+      TSB_MAC_PFX: ${{ secrets.MAC_CERT_PFX_BASE64 }}
+      TSB_MAC_PASS: ${{ secrets.MAC_CERT_PASSWORD }}
+      TSB_APPLE_ID: ${{ secrets.APPLE_ID }}
+      TSB_APPLE_PASS: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+      TSB_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
     strategy:
       fail-fast: false
       matrix:
@@ -50,18 +62,15 @@ jobs:
       #            certificate) + MAC_CERT_PASSWORD + APPLE_ID +
       #            APPLE_APP_SPECIFIC_PASSWORD + APPLE_TEAM_ID (notarization)
       - name: Configure Windows code signing (optional)
-        if: runner.os == 'Windows' && secrets.WIN_CERT_PFX_BASE64 != ''
+        if: runner.os == 'Windows' && env.TSB_WIN_PFX != ''
         run: |
           $pfx = Join-Path $env:RUNNER_TEMP 'tsb-signing-cert.pfx'
           [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:TSB_WIN_PFX))
           "CSC_LINK=$pfx" >> $env:GITHUB_ENV
           "CSC_KEY_PASSWORD=$env:TSB_WIN_PASS" >> $env:GITHUB_ENV
-        env:
-          TSB_WIN_PFX: ${{ secrets.WIN_CERT_PFX_BASE64 }}
-          TSB_WIN_PASS: ${{ secrets.WIN_CERT_PASSWORD }}
 
       - name: Configure macOS signing + notarization (optional)
-        if: runner.os == 'macOS' && secrets.MAC_CERT_PFX_BASE64 != ''
+        if: runner.os == 'macOS' && env.TSB_MAC_PFX != ''
         run: |
           PFX="$RUNNER_TEMP/tsb-signing-cert.p12"
           echo "$TSB_MAC_PFX" | base64 --decode > "$PFX"
@@ -70,12 +79,6 @@ jobs:
           echo "APPLE_ID=$TSB_APPLE_ID" >> "$GITHUB_ENV"
           echo "APPLE_APP_SPECIFIC_PASSWORD=$TSB_APPLE_PASS" >> "$GITHUB_ENV"
           echo "APPLE_TEAM_ID=$TSB_TEAM_ID" >> "$GITHUB_ENV"
-        env:
-          TSB_MAC_PFX: ${{ secrets.MAC_CERT_PFX_BASE64 }}
-          TSB_MAC_PASS: ${{ secrets.MAC_CERT_PASSWORD }}
-          TSB_APPLE_ID: ${{ secrets.APPLE_ID }}
-          TSB_APPLE_PASS: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-          TSB_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 
       - name: Build installer
         run: npx electron-builder ${{ matrix.args }} --publish never
