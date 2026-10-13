@@ -43,10 +43,19 @@ contextBridge.exposeInMainWorld('tsb', {
   installUpdate: () => ipcRenderer.invoke('update:install'),
   openUpdatePage: () => ipcRenderer.invoke('update:open-release'),
 
+  // --- connection test / VPN gateway --------------------------------------
+  testConnection: () => ipcRenderer.invoke('tor:test-connection'),
+  getVpnStatus: () => ipcRenderer.invoke('vpn:get-status'),
+  startVpn: () => ipcRenderer.invoke('vpn:start'),
+  stopVpn: () => ipcRenderer.invoke('vpn:stop'),
+  setSystemProxy: (enabled) => ipcRenderer.invoke('vpn:set-system-proxy', enabled),
+  testVpn: () => ipcRenderer.invoke('vpn:test'),
+
   // --- events --------------------------------------------------------------
   onTabsUpdated: (cb) => subscribe('tabs:updated', cb),
   onTorStatus: (cb) => subscribe('tor:status', cb),
   onTorLog: (cb) => subscribe('tor:log', cb),
   onShortcut: (cb) => subscribe('ui:shortcut', cb),
   onUpdateStatus: (cb) => subscribe('update:status', cb),
+  onVpnStatus: (cb) => subscribe('vpn:status', cb),
 });

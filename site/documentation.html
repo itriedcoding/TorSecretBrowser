@@ -45,6 +45,7 @@
         <a href="#privacy">How privacy works</a>
         <a href="#onion">Onion services</a>
         <a href="#identity">New Identity</a>
+        <a href="#gateway">Tor gateway (VPN)</a>
         <a href="#configuration">Configuration</a>
         <a href="#build">Build from source</a>
         <a href="#verify">Verify the build</a>
@@ -160,6 +161,13 @@
            Tor daemon itself. Paste one into the address bar and press Enter — there is no
            configuration, extension or "onion mode" to enable.</p>
         <pre><code>http://duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion/</code></pre>
+        <div class="note">
+          First contact to an <code>.onion</code> routinely takes 30–60 seconds while Tor
+          fetches its descriptor and builds a rendezvous circuit — the page stays blank
+          until the onion answers. The browser says so explicitly ("Still loading") rather
+          than leaving you guessing. If a page fails, you get the real error and a Retry
+          button, not a silent blank page.
+        </div>
 
         <h2 id="identity">New Identity</h2>
         <p>Choosing <em>New Identity</em>:</p>
@@ -170,6 +178,28 @@
         </ul>
         <p>Because every circuit is torn down, expect a few seconds of re-bootstrapping
            before browsing feels fast again.</p>
+
+        <h2 id="gateway">Tor gateway (built-in VPN)</h2>
+        <p>The shield button in the toolbar opens the built-in <strong>Tor gateway</strong>.
+           Once Tor reaches 100% it exposes a loopback <strong>SOCKS5</strong> endpoint and an
+           <strong>HTTP CONNECT</strong> endpoint, both forwarded through the bundled Tor
+           daemon — point any other application at them
+           (for example <code>socks5://127.0.0.1:&lt;port&gt;</code>) to route it through Tor.</p>
+        <ul class="checks">
+          <li><strong>Real, no mocks.</strong> Connections are refused — never leaked — if Tor
+              is down. Nothing is faked or tunnelled around Tor.</li>
+          <li><strong>Test connection.</strong> Runs an actual CONNECT to a clearnet host and
+              to a <code>.onion</code> and reports the true result and latency.</li>
+          <li><strong>Optional OS proxy.</strong> A checkbox can point the operating system's
+              proxy at the gateway. It is reverted automatically when you quit — and on the
+              next launch if the app ever crashed — so it can never strand your networking.</li>
+        </ul>
+        <div class="note">
+          This is honestly a Tor <em>gateway</em>, not a commercial VPN: there are no
+          third-party servers, it is TCP-only (Tor carries no UDP), and it sets a
+          <em>proxy</em> rather than installing a TUN/TAP tunnel — apps that ignore the
+          system proxy are unaffected.
+        </div>
 
         <h2 id="configuration">Configuration</h2>
         <p>The app locates a Tor binary in this order:</p>
@@ -217,12 +247,14 @@ npm run dist:dir  # unpacked build for quick testing</code></pre>
         <p>Three checks ship with the source, and none of them are placeholders:</p>
         <pre><code>npm run syntax-check   # static parse of every source file
 npm run smoke          # Electron integration test; no network needed
-npm run test:tor       # launches real Tor, waits for bootstrap, then NEWNYM</code></pre>
+npm run test:tor       # real Tor: bootstrap, NEWNYM, clearnet + .onion reachability</code></pre>
         <p><code>npm run smoke</code> stands up a fake Tor SOCKS5 endpoint and asserts that the
            browser reaches it through the per-tab shim, that different tabs use different
-           isolation usernames, that <code>.onion</code> CONNECT requests are relayed, and that
-           WebRTC is removed from the page. <code>npm run test:tor</code> proves the real daemon
-           starts, authenticates over the control port and builds circuits.</p>
+           isolation usernames, that <code>.onion</code> CONNECT requests are relayed, that
+           WebRTC is removed from the page, and that the built-in gateway relays both SOCKS5
+           and HTTP CONNECT. <code>npm run test:tor</code> proves the real daemon starts,
+           authenticates over the control port, builds circuits, and can actually reach a
+           clearnet host and a <code>.onion</code>.</p>
 
         <h2 id="troubleshooting">Troubleshooting</h2>
         <h3>"Tor binary not found"</h3>
@@ -237,8 +269,15 @@ npm run test:tor       # launches real Tor, waits for bootstrap, then NEWNYM</co
               bridges ship inside the Expert Bundle under <code>pluggable_transports/</code>.</li>
         </ul>
         <h3>A specific site doesn't load</h3>
-        <p>Many sites block Tor exits or have no onion version. Errors appear in the
-           diagnostic log — click the Tor chip to expand it.</p>
+        <p>Many sites block Tor exits or have no onion version. A failed load shows a red
+           banner with the exact error (for example
+           <code>ERR_SOCKS_CONNECTION_FAILED</code> or <code>ERR_TIMED_OUT</code>) and a
+           Retry button — never a silent blank page. If the browser is still connecting, a
+           pending navigation is held and opened automatically once Tor is ready.</p>
+        <p>For <code>.onion</code> addresses specifically: first contact routinely takes
+           30–60 seconds, and a few onions are simply down (we have measured both). Use the
+           gateway panel's <strong>Test connection</strong> button to check whether Tor can
+           reach a known clearnet host and a known <code>.onion</code> right now.</p>
         <h3>Performance</h3>
         <p>Traffic takes three relays around the world and is encrypted at each hop, so
            latency is higher than a normal browser. This is inherent to Tor, not to this
@@ -264,8 +303,12 @@ npm run test:tor       # launches real Tor, waits for bootstrap, then NEWNYM</co
           <li><strong>The "no history" model is in-memory per session.</strong> It does not defend
               against an attacker with access to your machine or swap; use full-disk
               encryption.</li>
-          <li><strong>OS-level leaks are out of scope.</strong> If your OS or another app leaks
-              traffic, this browser cannot stop that. Consider a VM or Tails for high-risk use.</li>
+           <li><strong>OS-level leaks are out of scope.</strong> If your OS or another app leaks
+               traffic, this browser cannot stop that. Consider a VM or Tails for high-risk use.</li>
+           <li><strong>The built-in gateway is a proxy, not a tunnel.</strong> It exposes
+               Tor-routed SOCKS5/HTTP endpoints and can set the OS proxy, but it does not
+               install a TUN/TAP driver — applications that bypass the system proxy are not
+               captured. It is TCP-only because Tor carries no UDP.</li>
         </ol>
 
         <h2 id="faq">FAQ</h2>

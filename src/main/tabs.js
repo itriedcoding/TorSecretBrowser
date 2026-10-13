@@ -37,11 +37,32 @@ class TabManager extends EventEmitter {
     this.torHost = opts.torHost || '127.0.0.1';
     this.torSocksPort = opts.torSocksPort;
     this.bounds = opts.bounds || { x: 0, y: 0, width: 0, height: 0 };
+    // Navigation to the network is gated on Tor being fully bootstrapped, so a
+    // page is never attempted against a not-yet-ready SOCKS port (which used to
+    // surface as a silent blank page).
+    this.isTorReady = typeof opts.isTorReady === 'function' ? opts.isTorReady : () => true;
+    this.torReady = !!this.isTorReady();
 
     this.tabs = new Map(); // id -> tab
     this.activeId = null;
     this._counter = 0;
     this._hardeningScript = buildHardeningScript({ userAgent: this.userAgent });
+  }
+
+  /**
+   * Update the Tor-ready gate. When Tor finishes bootstrapping, any tab that is
+   * holding a pending navigation is loaded at that point.
+   */
+  setTorReady(ready) {
+    this.torReady = !!ready;
+    if (!this.torReady) return;
+    for (const tab of this.tabs.values()) {
+      if (tab.pendingUrl) {
+        const url = tab.pendingUrl;
+        tab.pendingUrl = null;
+        this.navigate(tab.id, url);
+      }
+    }
   }
 
   /* ------------------------------- queries ------------------------------ */
@@ -57,6 +78,7 @@ class TabManager extends EventEmitter {
       url: t.url,
       loading: t.loading,
       error: t.error,
+      pending: !!t.pendingUrl,
       canGoBack: t.canGoBack,
       canGoForward: t.canGoForward,
       active: t.id === this.activeId,
@@ -126,6 +148,7 @@ class TabManager extends EventEmitter {
       url: url || '',
       loading: false,
       error: null,
+      pendingUrl: null,
       canGoBack: false,
       canGoForward: false,
       _injected: false,
@@ -306,6 +329,17 @@ class TabManager extends EventEmitter {
     const url = normalizeUrl(input);
     if (!url) return;
     tab.error = null;
+    if (!this.torReady) {
+      // Tor has not finished bootstrapping. Hold the URL and load it the moment
+      // we are ready, rather than loading against a dead SOCKS port and leaving
+      // the user staring at a blank page.
+      tab.pendingUrl = url;
+      tab.url = url;
+      this.emit('log', 'Tor is still connecting; holding navigation until ready');
+      this._emitUpdate();
+      return;
+    }
+    tab.pendingUrl = null;
     tab.view.webContents.loadURL(url).catch((err) => {
       tab.error = err.message;
       this._emitUpdate();

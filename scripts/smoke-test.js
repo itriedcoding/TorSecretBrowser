@@ -24,6 +24,9 @@ const assert = require('assert');
 const { app, BrowserWindow, session } = require('electron');
 
 const { TabManager, normalizeUrl } = require(path.join(__dirname, '..', 'src', 'main', 'tabs'));
+const { VpnGateway } = require(path.join(__dirname, '..', 'src', 'main', 'vpn-gateway'));
+const { openTunnel } = require(path.join(__dirname, '..', 'src', 'main', 'socks-client'));
+const { testConnection } = require(path.join(__dirname, '..', 'src', 'main', 'net-test'));
 
 let failures = 0;
 function check(name, fn) {
@@ -187,6 +190,79 @@ app.whenReady().then(async () => {
     assert.ok(fake.seen.users.length > 0 && fake.seen.users.every((u) => u.startsWith('iso-'))));
   check('different tabs used different isolation usernames', () =>
     assert.ok(distinctUsers.length >= 2, `distinct usernames: ${JSON.stringify(distinctUsers)}`));
+
+  // --- VPN gateway: SOCKS5 + HTTP CONNECT, both forwarded to "Tor" --------
+  const vpn = new VpnGateway({ torHost: '127.0.0.1', torPort: fake.port });
+  await vpn.start();
+  check('gateway exposes a SOCKS5 and an HTTP CONNECT port', () =>
+    assert.ok(vpn.socksPort > 0 && vpn.httpPort > 0, `socks=${vpn.socksPort} http=${vpn.httpPort}`));
+
+  // SOCKS5 path through the gateway.
+  let tunnel = null;
+  try {
+    tunnel = await openTunnel({
+      socksHost: '127.0.0.1',
+      socksPort: vpn.socksPort,
+      targetHost: 'gamma.onion',
+      targetPort: 80,
+      timeoutMs: 6000,
+    });
+  } catch (_) {}
+  check('gateway SOCKS5 tunnel established', () => assert.ok(tunnel && tunnel.socket));
+  if (tunnel) {
+    try {
+      tunnel.socket.destroy();
+    } catch (_) {}
+  }
+  await waitFor(() => fake.seen.targets.includes('gamma.onion'), 5000, 'gamma.onion via gateway').catch(() => {});
+  check('gateway reached Tor with its own identity', () =>
+    assert.ok(
+      fake.seen.targets.includes('gamma.onion') && fake.seen.users.includes('tsb-vpn-gateway'),
+      `targets: ${JSON.stringify(fake.seen.targets)} users: ${JSON.stringify(fake.seen.users)}`
+    ));
+
+  // HTTP CONNECT path through the gateway.
+  const httpRes = await new Promise((resolve) => {
+    const s = net.connect({ host: '127.0.0.1', port: vpn.httpPort }, () => {
+      s.write('CONNECT delta.onion:80 HTTP/1.1\r\nHost: delta.onion:80\r\n\r\n');
+    });
+    let b = '';
+    s.on('data', (d) => {
+      b += d.toString('latin1');
+      if (b.includes('hello') || b.length > 400) {
+        try {
+          s.destroy();
+        } catch (_) {}
+        resolve(b);
+      }
+    });
+    s.on('error', () => resolve(b));
+    setTimeout(() => {
+      try {
+        s.destroy();
+      } catch (_) {}
+      resolve(b);
+    }, 6000);
+  });
+  check('gateway HTTP CONNECT returned 200 Established', () =>
+    assert.ok(/HTTP\/1\.1 200/.test(httpRes), `got: ${httpRes.slice(0, 80)}`));
+
+  // net-test reports a real, structured success.
+  let testRes = null;
+  try {
+    testRes = await testConnection({
+      socksHost: '127.0.0.1',
+      socksPort: fake.port,
+      username: 'probe',
+      password: 'probe',
+      targets: [{ id: 't', label: 'fake', host: 'epsilon.onion', port: 80, timeoutMs: 5000 }],
+    });
+  } catch (_) {}
+  check('net-test reports a real success', () =>
+    assert.ok(testRes && testRes.ok === true, JSON.stringify(testRes)));
+
+  await vpn.stop();
+  check('gateway stops cleanly', () => assert.strictEqual(vpn.running, false));
 
   console.log(`\n${failures === 0 ? 'ALL SMOKE TESTS PASSED' : failures + ' SMOKE TEST(S) FAILED'}`);
 

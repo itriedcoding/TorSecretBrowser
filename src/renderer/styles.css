@@ -285,6 +285,102 @@ html, body {
   margin: 0;
 }
 
+/* --------------------------- page notice ------------------------------- */
+/* A thin bar under the toolbar that explains a blank page (load error, or a
+   navigation still waiting for Tor). The viewport is pushed down while it is
+   visible so the native view never covers it. */
+#page-notice {
+  position: absolute;
+  top: 84px;
+  left: 0;
+  right: 0;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  font-size: 12.5px;
+  z-index: 12;
+  background: #2a2136;
+  border-bottom: 1px solid var(--border);
+  color: var(--fg);
+}
+#page-notice.hidden { display: none; }
+#page-notice.error { background: #3a1f22; }
+#page-notice.pending { background: #26243a; }
+#page-notice-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.page-notice-spacer { flex: 1; }
+#page-notice button {
+  border: 1px solid var(--border);
+  background: var(--bg-elev2);
+  color: var(--fg);
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-size: 11.5px;
+  cursor: pointer;
+}
+#page-notice button:hover { background: #34343d; }
+#page-notice button.hidden { display: none; }
+#page-notice-close { border: 0 !important; background: transparent !important; font-size: 16px; width: 24px; height: 24px; }
+
+/* --------------------------- VPN panel --------------------------------- */
+#vpn-panel {
+  position: absolute;
+  top: 90px;
+  right: 10px;
+  width: 380px;
+  max-width: calc(100vw - 20px);
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  z-index: 20;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+#vpn-panel.hidden { display: none; }
+.vpn-toggle-row { display: flex; gap: 8px; margin-bottom: 12px; }
+.vpn-endpoints { margin: 0 0 4px; }
+.vpn-endpoints.hidden { display: none; }
+.vpn-endpoint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  background: var(--bg-elev2);
+}
+.vpn-label {
+  color: var(--fg-dim);
+  font-size: 11px;
+  min-width: 96px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.vpn-endpoint code { flex: 1; font-size: 12px; color: var(--fg); user-select: text; }
+.mini {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg-dim);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  cursor: pointer;
+}
+.mini:hover { color: var(--fg); border-color: var(--accent); }
+.vpn-sysrow {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 11.5px;
+  color: var(--fg-dim);
+  line-height: 1.4;
+  margin: 4px 0 8px;
+}
+.vpn-sysrow input { margin-top: 2px; }
+#vpn-btn.active { color: var(--ok); }
+
 /* ------------------------------ viewport ------------------------------- */
 /* This element is purely a placeholder; the native view is drawn on top of
    exactly this rectangle. It must fill all remaining space. */

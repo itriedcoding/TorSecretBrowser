@@ -18,6 +18,9 @@ const { applyCommandLineSwitches } = require('./privacy');
 const { findTorBinary, torDataDir } = require('./paths');
 const { TorManager } = require('./tor-manager');
 const { TabManager } = require('./tabs');
+const { VpnGateway } = require('./vpn-gateway');
+const { SystemProxy } = require('./system-proxy');
+const { testConnection } = require('./net-test');
 const updater = require('./updater');
 
 // ---------------------------------------------------------------------------
@@ -36,6 +39,8 @@ let tor = null;
 let tabs = null;
 let torError = null;
 let updateCheckScheduled = false;
+let vpn = null;
+const systemProxy = new SystemProxy();
 
 const singleInstance = app.requestSingleInstanceLock();
 if (!singleInstance) {
@@ -129,14 +134,19 @@ async function startTor() {
   try {
     await tor.start();
     pushTorStatus();
-    // Build the tab manager now that we know the SOCKS port.
+    // Build the tab manager now that we know the SOCKS port. We deliberately do
+    // NOT create a tab yet: navigation is held until Tor has fully bootstrapped
+    // so users never hit a not-yet-ready proxy (which showed as a blank page).
     ensureTabs();
     // Wait for full bootstrap in the background; UI reflects progress.
     tor
       .waitForReady()
       .then(async () => {
         pushTorStatus();
+        if (tabs) tabs.setTorReady(true);
         if (tabs && tabs.tabs.size === 0) createInitialTab();
+        // Bring up the built-in Tor gateway now that Tor is actually reachable.
+        await startGateway();
         // Route update traffic through this Tor instance, then check once.
         updater.setSocksPort(tor.socksPort);
         scheduleUpdateCheck();
@@ -160,6 +170,7 @@ function ensureTabs() {
     userAgent: USER_AGENT,
     torHost: '127.0.0.1',
     torSocksPort: tor.socksPort,
+    isTorReady: () => !!(tor && tor.status.progress >= 100),
     bounds: { x: 0, y: 0, width: 0, height: 0 },
   });
   tabs.on('updated', (list) => {
@@ -215,6 +226,47 @@ function scheduleUpdateCheck() {
 }
 
 // ---------------------------------------------------------------------------
+// VPN gateway (Tor-routed SOCKS5 + HTTP CONNECT)
+// ---------------------------------------------------------------------------
+function pushVpnStatus() {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('vpn:status', vpnSnapshot());
+  }
+}
+
+function vpnSnapshot() {
+  return {
+    gateway: vpn ? vpn.snapshot() : { running: false, socksPort: null, httpPort: null },
+    systemProxy: systemProxy.enabled,
+    canSystemProxy: ['win32', 'darwin', 'linux'].includes(process.platform),
+  };
+}
+
+async function startGateway() {
+  if (!tor || !tor.socksPort) return;
+  if (!vpn) {
+    vpn = new VpnGateway({ torHost: '127.0.0.1', torPort: tor.socksPort });
+    vpn.on('status', () => pushVpnStatus());
+    vpn.on('log', (line) => sendToChromeLog(`vpn: ${line}`));
+  }
+  try {
+    await vpn.start();
+  } catch (err) {
+    sendToChromeLog(`vpn: gateway failed to start: ${err.message}`);
+  }
+  pushVpnStatus();
+}
+
+async function stopGateway() {
+  if (vpn) {
+    try {
+      await vpn.stop();
+    } catch (_) {}
+  }
+  pushVpnStatus();
+}
+
+// ---------------------------------------------------------------------------
 // IPC surface exposed to the chrome UI
 // ---------------------------------------------------------------------------
 function registerIpc() {
@@ -236,6 +288,15 @@ function registerIpc() {
   });
 
   ipcMain.handle('tor:restart', async () => {
+    if (systemProxy.enabled) {
+      try {
+        await systemProxy.disable();
+      } catch (_) {}
+    }
+    await stopGateway();
+    if (vpn) {
+      vpn = null;
+    }
     if (tabs) tabs.closeAll();
     if (tor) {
       try {
@@ -313,6 +374,50 @@ function registerIpc() {
     updater.openReleasePage();
     return true;
   });
+
+  // --- Tor reachability self-test ------------------------------------------
+  ipcMain.handle('tor:test-connection', async () => {
+    if (!tor || !tor.socksPort) throw new Error('Tor is not running');
+    return testConnection({ socksHost: '127.0.0.1', socksPort: tor.socksPort });
+  });
+
+  // --- VPN gateway ----------------------------------------------------------
+  ipcMain.handle('vpn:get-status', () => vpnSnapshot());
+
+  ipcMain.handle('vpn:start', async () => {
+    await startGateway();
+    return vpnSnapshot();
+  });
+
+  ipcMain.handle('vpn:stop', async () => {
+    if (systemProxy.enabled) {
+      try {
+        await systemProxy.disable();
+      } catch (_) {}
+    }
+    await stopGateway();
+    return vpnSnapshot();
+  });
+
+  ipcMain.handle('vpn:set-system-proxy', async (_e, enabled) => {
+    if (enabled) {
+      if (!vpn || !vpn.running || !vpn.socksPort) {
+        await startGateway();
+      }
+      if (!vpn || !vpn.socksPort) throw new Error('The Tor gateway is not running yet');
+      await systemProxy.enable('127.0.0.1', vpn.socksPort);
+    } else {
+      await systemProxy.disable();
+    }
+    pushVpnStatus();
+    return vpnSnapshot();
+  });
+
+  ipcMain.handle('vpn:test', async () => {
+    const port = vpn && vpn.running ? vpn.socksPort : tor && tor.socksPort;
+    if (!port) throw new Error('Tor is not running');
+    return testConnection({ socksHost: '127.0.0.1', socksPort: port, username: 'tsb-vpn-gateway', password: 'gateway' });
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -324,6 +429,10 @@ app.whenReady().then(async () => {
   try {
     session.defaultSession.setPermissionRequestHandler((_wc, _p, cb) => cb(false));
   } catch (_) {}
+
+  // If a previous run left the system proxy pointed at us (e.g. a crash), undo
+  // that before doing anything else so we never strand the user's networking.
+  SystemProxy.recoverStale().catch(() => {});
 
   registerIpc();
   createWindow();
@@ -337,10 +446,7 @@ app.whenReady().then(async () => {
   // Give the renderer a moment to mount before we start streaming status.
   mainWindow.webContents.once('did-finish-load', async () => {
     const ok = await startTor();
-    if (ok) {
-      ensureTabs();
-      createInitialTab();
-    }
+    if (ok) ensureTabs();
   });
 
   app.on('activate', () => {
@@ -353,13 +459,18 @@ app.on('window-all-closed', () => {
 });
 
 app.on('before-quit', async (event) => {
-  if (tor) {
+  if (tor || vpn || systemProxy.enabled) {
     event.preventDefault();
     try {
+      if (systemProxy.enabled) await systemProxy.disable();
+    } catch (_) {}
+    try {
       if (tabs) tabs.closeAll();
-      await tor.stop();
+      await stopGateway();
+      if (tor) await tor.stop();
     } catch (_) {}
     tor = null;
+    vpn = null;
     app.exit(0);
   }
 });

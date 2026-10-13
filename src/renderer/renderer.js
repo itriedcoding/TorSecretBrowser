@@ -36,6 +36,23 @@ const els = {
   updateBar: document.getElementById('update-bar'),
   updateNotes: document.getElementById('update-notes'),
   updateActions: document.getElementById('update-actions'),
+  pageNotice: document.getElementById('page-notice'),
+  pageNoticeText: document.getElementById('page-notice-text'),
+  pageNoticeRetry: document.getElementById('page-notice-retry'),
+  pageNoticeClose: document.getElementById('page-notice-close'),
+  vpnBtn: document.getElementById('vpn-btn'),
+  vpnPanel: document.getElementById('vpn-panel'),
+  vpnClose: document.getElementById('vpn-close'),
+  vpnStatus: document.getElementById('vpn-status'),
+  vpnToggle: document.getElementById('vpn-toggle'),
+  vpnTest: document.getElementById('vpn-test'),
+  vpnEndpoints: document.getElementById('vpn-endpoints'),
+  vpnSocks: document.getElementById('vpn-socks'),
+  vpnHttp: document.getElementById('vpn-http'),
+  vpnCopySocks: document.getElementById('vpn-copy-socks'),
+  vpnCopyHttp: document.getElementById('vpn-copy-http'),
+  vpnSystem: document.getElementById('vpn-system'),
+  vpnTestResult: document.getElementById('vpn-test-result'),
 };
 
 const state = {
@@ -44,7 +61,14 @@ const state = {
   tor: { state: 'idle', progress: 0 },
   overlayVisible: false,
   update: { state: 'idle' },
+  vpn: { gateway: { running: false }, systemProxy: false },
+  dismissed: { id: null, text: null },
+  loadStart: {},
 };
+
+/* A page (especially a .onion) can legitimately take a long time before the
+ * first byte arrives. Past this point we say so explicitly. */
+const SLOW_AFTER_MS = 20000;
 
 /* ----------------------------------------------------------------------- */
 /* Layout: report the content rectangle to the main process so the native   */
@@ -147,12 +171,73 @@ function updateToolbar() {
   const isOnion = /\.onion(:\d+)?(\/|$)/i.test(url);
   els.scheme.textContent = isOnion ? 'onion' : scheme || 'http';
   els.scheme.classList.toggle('onion', isOnion);
+
+  renderPageNotice();
+}
+
+/* Show why a page is blank: a load error, a navigation still waiting for Tor to
+ * finish bootstrapping, or a legitimately slow first contact (common for
+ * .onion). Without this a failed or slow onion/clearnet load is silent. */
+function renderPageNotice() {
+  const tab = activeTab();
+  let text = '';
+  let isError = false;
+  let showRetry = false;
+
+  if (tab && tab.error) {
+    text = `Couldn't load this page — ${tab.error}`;
+    isError = true;
+    showRetry = true;
+  } else if (tab && tab.pending) {
+    text = 'Connecting to the Tor network — this page will open automatically once Tor is ready.';
+  } else if (
+    tab &&
+    tab.loading &&
+    state.loadStart[tab.id] &&
+    Date.now() - state.loadStart[tab.id] > SLOW_AFTER_MS
+  ) {
+    const onion = /\.onion(:\d+)?(\/|$)/i.test(tab.url || '');
+    text = onion
+      ? 'Still loading — first contact to a .onion routinely takes 30–60 seconds on Tor. The page stays blank until the onion answers; this is normal, not a stuck page.'
+      : 'Still loading — Tor is slower than the clearnet. Give it a little longer before retrying.';
+  }
+
+  if (!text || (tab && state.dismissed.id === tab.id && state.dismissed.text === text)) {
+    els.pageNotice.classList.add('hidden');
+    els.viewport.style.top = '';
+    syncBounds();
+    return;
+  }
+  els.pageNoticeText.textContent = text;
+  els.pageNotice.classList.toggle('error', isError);
+  els.pageNotice.classList.toggle('pending', !isError);
+  els.pageNoticeRetry.classList.toggle('hidden', !showRetry);
+  els.pageNotice.classList.remove('hidden');
+  els.viewport.style.top = 84 + els.pageNotice.offsetHeight + 'px';
+  syncBounds();
 }
 
 function applyTabs(list) {
   state.tabs = Array.isArray(list) ? list : [];
   const active = state.tabs.find((t) => t.active);
   state.activeId = active ? active.id : (state.tabs[0] ? state.tabs[0].id : null);
+
+  // Track how long each tab has been loading so slow .onion first-contacts can
+  // be labelled instead of looking like a dead blank page.
+  const now = Date.now();
+  const seen = new Set();
+  for (const t of state.tabs) {
+    seen.add(t.id);
+    if (t.loading) {
+      if (!state.loadStart[t.id]) state.loadStart[t.id] = now;
+    } else {
+      delete state.loadStart[t.id];
+    }
+  }
+  for (const id of Object.keys(state.loadStart)) {
+    if (!seen.has(id)) delete state.loadStart[id];
+  }
+
   renderTabs();
   updateToolbar();
   syncBounds();
@@ -302,11 +387,78 @@ function renderUpdate(status) {
 }
 
 /* ----------------------------------------------------------------------- */
+/* VPN / Tor gateway                                                        */
+/* ----------------------------------------------------------------------- */
+function showVpnPanel() {
+  els.vpnPanel.classList.remove('hidden');
+  els.vpnBtn.setAttribute('aria-expanded', 'true');
+}
+function hideVpnPanel() {
+  els.vpnPanel.classList.add('hidden');
+  els.vpnBtn.setAttribute('aria-expanded', 'false');
+}
+
+function renderVpn(status) {
+  state.vpn = status || { gateway: { running: false }, systemProxy: false, canSystemProxy: false };
+  const g = state.vpn.gateway || {};
+  const running = !!g.running;
+
+  els.vpnBtn.classList.toggle('active', running);
+  els.vpnToggle.textContent = running ? 'Stop gateway' : 'Start gateway';
+  els.vpnToggle.classList.toggle('primary', !running);
+
+  if (running && g.socksPort) {
+    els.vpnStatus.textContent =
+      'Gateway is running. Point any application at the endpoints below to route it through Tor.';
+    els.vpnEndpoints.classList.remove('hidden');
+    els.vpnSocks.textContent = `127.0.0.1:${g.socksPort}`;
+    els.vpnHttp.textContent = `127.0.0.1:${g.httpPort}`;
+    els.vpnSystem.checked = !!state.vpn.systemProxy;
+    els.vpnSystem.disabled = !state.vpn.canSystemProxy;
+  } else {
+    els.vpnStatus.textContent =
+      state.tor.state === 'ready'
+        ? 'The gateway is stopped. Start it to expose a Tor-routed proxy.'
+        : 'Waiting for Tor to finish connecting…';
+    els.vpnEndpoints.classList.add('hidden');
+  }
+}
+
+function formatTestResults(res) {
+  if (!res || !Array.isArray(res.results)) return 'No result.';
+  return res.results
+    .map((r) => `${r.label}: ${r.ok ? `OK (${r.ms} ms)` : `FAILED — ${r.error}`}`)
+    .join('\n');
+}
+
+function copyText(text, button) {
+  const done = () => {
+    const prev = button.textContent;
+    button.textContent = 'Copied';
+    setTimeout(() => (button.textContent = prev), 1200);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done, () => {});
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand('copy');
+    } catch (_) {}
+    document.body.removeChild(ta);
+    done();
+  }
+}
+
+/* ----------------------------------------------------------------------- */
 /* Wiring                                                                   */
 /* ----------------------------------------------------------------------- */
 api.onTabsUpdated(applyTabs);
 api.onTorStatus(renderTorStatus);
 api.onUpdateStatus(renderUpdate);
+api.onVpnStatus(renderVpn);
 api.onShortcut((name) => {
   if (name === 'focus-url') els.url.focus();
 });
@@ -356,6 +508,74 @@ els.updateBtn.addEventListener('click', () => {
 });
 els.updateClose.addEventListener('click', hideUpdatePanel);
 
+/* --- page notice ------------------------------------------------------- */
+els.pageNoticeClose.addEventListener('click', () => {
+  const tab = activeTab();
+  state.dismissed = { id: tab ? tab.id : null, text: els.pageNoticeText.textContent };
+  renderPageNotice();
+});
+els.pageNoticeRetry.addEventListener('click', () => {
+  const tab = activeTab();
+  if (!tab) return;
+  state.dismissed = { id: null, text: null };
+  api.navigate(tab.id, tab.url || '');
+  renderPageNotice();
+});
+
+/* --- VPN / gateway ----------------------------------------------------- */
+els.vpnBtn.addEventListener('click', () => {
+  if (els.vpnPanel.classList.contains('hidden')) showVpnPanel();
+  else hideVpnPanel();
+});
+els.vpnClose.addEventListener('click', hideVpnPanel);
+
+els.vpnToggle.addEventListener('click', async () => {
+  const running = state.vpn.gateway && state.vpn.gateway.running;
+  els.vpnToggle.disabled = true;
+  try {
+    const next = running ? await api.stopVpn() : await api.startVpn();
+    renderVpn(next);
+  } catch (err) {
+    els.vpnTestResult.textContent = `Gateway error: ${err.message}`;
+    els.vpnTestResult.classList.remove('hidden');
+  }
+  els.vpnToggle.disabled = false;
+});
+
+els.vpnSystem.addEventListener('change', async () => {
+  const want = els.vpnSystem.checked;
+  els.vpnSystem.disabled = true;
+  try {
+    const next = await api.setSystemProxy(want);
+    renderVpn(next);
+  } catch (err) {
+    els.vpnTestResult.textContent = `System proxy error: ${err.message}`;
+    els.vpnTestResult.classList.remove('hidden');
+    els.vpnSystem.checked = !want;
+  }
+  els.vpnSystem.disabled = !state.vpn.canSystemProxy;
+});
+
+els.vpnTest.addEventListener('click', async () => {
+  els.vpnTest.disabled = true;
+  els.vpnTestResult.classList.remove('hidden');
+  els.vpnTestResult.textContent = 'Testing clearnet and .onion reachability through Tor…';
+  try {
+    const result = await api.testVpn();
+    els.vpnTestResult.textContent = formatTestResults(result);
+  } catch (err) {
+    els.vpnTestResult.textContent = `Test failed: ${err.message}`;
+  }
+  els.vpnTest.disabled = false;
+});
+
+els.vpnCopySocks.addEventListener('click', () =>
+  copyText(els.vpnSocks.textContent, els.vpnCopySocks)
+);
+els.vpnCopyHttp.addEventListener('click', () =>
+  copyText(els.vpnHttp.textContent, els.vpnCopyHttp)
+);
+
 // Keyboard shortcuts that work while the chrome UI itself has focus. Shortcuts
 // while a web page is focused are handled in the main process (tabs.js).
 window.addEventListener('keydown', (e) => {
@@ -377,6 +597,10 @@ window.addEventListener('keydown', (e) => {
   try {
     const update = await api.getUpdateStatus();
     renderUpdate(update);
+  } catch (_) {}
+  try {
+    const vpnStatus = await api.getVpnStatus();
+    renderVpn(vpnStatus);
   } catch (_) {}
   syncBounds();
 })();

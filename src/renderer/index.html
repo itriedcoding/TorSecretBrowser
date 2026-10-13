@@ -38,9 +38,18 @@
 
     <div class="right-group">
       <button id="new-identity" title="New Tor identity (new circuits)">New Identity</button>
+      <button id="vpn-btn" class="icon" title="Tor gateway / VPN" aria-haspopup="dialog" aria-expanded="false">&#128737;</button>
       <button id="update-btn" class="icon" title="Software updates" aria-haspopup="dialog" aria-expanded="false">&#8595;</button>
       <button id="tor-chip" class="chip" title="Tor status">Tor: …</button>
     </div>
+  </div>
+
+  <!-- ===================== Page notice ================= -->
+  <div id="page-notice" class="hidden">
+    <span id="page-notice-text"></span>
+    <span class="page-notice-spacer"></span>
+    <button id="page-notice-retry" class="hidden">Retry</button>
+    <button id="page-notice-close" title="Dismiss" aria-label="Dismiss">&times;</button>
   </div>
 
   <!-- ===================== Update panel ================= -->
@@ -54,6 +63,37 @@
     <pre id="update-notes" class="update-notes hidden"></pre>
     <div id="update-actions" class="update-actions"></div>
     <p class="update-privacy">Version checks and downloads are routed through your Tor connection and never sent over the clearnet.</p>
+  </div>
+
+  <!-- ===================== VPN / gateway panel ========== -->
+  <div id="vpn-panel" class="hidden" role="dialog" aria-label="Tor gateway and VPN">
+    <div class="update-head">
+      <strong>Tor gateway (built-in VPN)</strong>
+      <button id="vpn-close" class="update-close" title="Close" aria-label="Close">&times;</button>
+    </div>
+    <p id="vpn-status" class="update-status">…</p>
+    <div class="vpn-toggle-row">
+      <button id="vpn-toggle" class="update-action primary">Starting…</button>
+      <button id="vpn-test" class="update-action">Test connection</button>
+    </div>
+    <div id="vpn-endpoints" class="vpn-endpoints hidden">
+      <div class="vpn-endpoint">
+        <span class="vpn-label">SOCKS5</span>
+        <code id="vpn-socks">—</code>
+        <button id="vpn-copy-socks" class="mini">Copy</button>
+      </div>
+      <div class="vpn-endpoint">
+        <span class="vpn-label">HTTP CONNECT</span>
+        <code id="vpn-http">—</code>
+        <button id="vpn-copy-http" class="mini">Copy</button>
+      </div>
+      <label class="vpn-sysrow">
+        <input type="checkbox" id="vpn-system" />
+        <span>Also set this as the operating system proxy (routes system apps through Tor; reverted automatically when you quit)</span>
+      </label>
+    </div>
+    <pre id="vpn-test-result" class="update-notes hidden"></pre>
+    <p class="update-privacy">This is a Tor gateway, not a commercial VPN: no third-party servers, TCP-only, and every connection exits through the Tor network. Point any app at the loopback endpoints above.</p>
   </div>
 
   <!-- ===================== Content viewport ============= -->

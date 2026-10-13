@@ -113,6 +113,10 @@ class SocksShim extends EventEmitter {
     this.torPort = opts.torPort;
     this.username = opts.username || '';
     this.password = opts.password || '';
+    // Optional *client*-facing authentication (RFC 1929). The per-tab browser
+    // shim leaves this null (loopback only). The VPN gateway sets it when it is
+    // bound to a non-loopback interface.
+    this.clientAuth = opts.clientAuth || null;
     this.server = null;
     this.port = null;
     this._sockets = new Set();
@@ -176,8 +180,28 @@ class SocksShim extends EventEmitter {
     if (head[0] !== VER) throw new Error('not a SOCKS5 client');
     const nmethods = head[1];
     const methods = nmethods > 0 ? await reader.read(nmethods) : Buffer.alloc(0);
-    if (!methods.includes(METHOD_NONE)) throw new Error('client requires unsupported auth');
-    client.write(Buffer.from([VER, METHOD_NONE]));
+
+    if (this.clientAuth) {
+      if (!methods.includes(METHOD_USERPASS)) {
+        client.write(Buffer.from([VER, 0x00, 0xff]));
+        throw new Error('client did not offer username/password auth');
+      }
+      client.write(Buffer.from([VER, METHOD_USERPASS]));
+      const authVer = (await reader.read(1))[0];
+      const ulen = (await reader.read(1))[0];
+      const uname = (ulen ? await reader.read(ulen) : Buffer.alloc(0)).toString('utf8');
+      const plen = (await reader.read(1))[0];
+      const passwd = (plen ? await reader.read(plen) : Buffer.alloc(0)).toString('utf8');
+      const ok =
+        authVer === 0x01 &&
+        uname === this.clientAuth.username &&
+        passwd === this.clientAuth.password;
+      client.write(Buffer.from([0x01, ok ? 0x00 : 0x01]));
+      if (!ok) throw new Error('client authentication failed');
+    } else {
+      if (!methods.includes(METHOD_NONE)) throw new Error('client requires unsupported auth');
+      client.write(Buffer.from([VER, METHOD_NONE]));
+    }
 
     // --- 2. CONNECT request from the browser -----------------------------
     const request = await this._readRequest(reader);

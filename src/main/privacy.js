@@ -29,6 +29,9 @@ const ALLOWED_SCHEMES = new Set([
   'blob:',
   'about:',
   'chrome:',
+  'chrome-error:', // Chromium's built-in "can't reach site" page — internal only.
+  'chrome-untrusted:',
+  'chrome-devtools:',
   'devtools:',
 ]);
 
