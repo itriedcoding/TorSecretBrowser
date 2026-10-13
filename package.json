@@ -1,7 +1,7 @@
 {
   "name": "tor-secret-browser",
   "productName": "Tor Secret Browser",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "A hardened Electron browser that routes all traffic through the Tor network, with native .onion support and no network leaks.",
   "main": "src/main/index.js",
   "private": true,
@@ -75,7 +75,10 @@
       "target": [
         "nsis"
       ],
-      "icon": "build/icon.png"
+      "icon": "build/icon.png",
+      "signingHashAlgorithms": [
+        "sha256"
+      ]
     },
     "nsis": {
       "oneClick": false,
@@ -90,7 +93,8 @@
       ],
       "category": "public.app-category.utilities",
       "icon": "build/icon.png",
-      "identity": null
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false
     },
     "linux": {
       "target": [

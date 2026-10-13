@@ -41,10 +41,47 @@ jobs:
       - name: Download Tor for this platform
         run: npm run fetch-tor
 
+      # Code signing is fully wired but OPT-IN: each step below is a no-op
+      # unless the corresponding repository secrets exist. Without them the
+      # build is simply unsigned (current state) and everything else works.
+      # Secrets needed to activate:
+      #   Windows: WIN_CERT_PFX_BASE64 (base64 .pfx) + WIN_CERT_PASSWORD
+      #   macOS:   MAC_CERT_PFX_BASE64 (base64 .p12 of a Developer ID Application
+      #            certificate) + MAC_CERT_PASSWORD + APPLE_ID +
+      #            APPLE_APP_SPECIFIC_PASSWORD + APPLE_TEAM_ID (notarization)
+      - name: Configure Windows code signing (optional)
+        if: runner.os == 'Windows' && secrets.WIN_CERT_PFX_BASE64 != ''
+        run: |
+          $pfx = Join-Path $env:RUNNER_TEMP 'tsb-signing-cert.pfx'
+          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:TSB_WIN_PFX))
+          "CSC_LINK=$pfx" >> $env:GITHUB_ENV
+          "CSC_KEY_PASSWORD=$env:TSB_WIN_PASS" >> $env:GITHUB_ENV
+        env:
+          TSB_WIN_PFX: ${{ secrets.WIN_CERT_PFX_BASE64 }}
+          TSB_WIN_PASS: ${{ secrets.WIN_CERT_PASSWORD }}
+
+      - name: Configure macOS signing + notarization (optional)
+        if: runner.os == 'macOS' && secrets.MAC_CERT_PFX_BASE64 != ''
+        run: |
+          PFX="$RUNNER_TEMP/tsb-signing-cert.p12"
+          echo "$TSB_MAC_PFX" | base64 --decode > "$PFX"
+          echo "CSC_LINK=$PFX" >> "$GITHUB_ENV"
+          echo "CSC_KEY_PASSWORD=$TSB_MAC_PASS" >> "$GITHUB_ENV"
+          echo "APPLE_ID=$TSB_APPLE_ID" >> "$GITHUB_ENV"
+          echo "APPLE_APP_SPECIFIC_PASSWORD=$TSB_APPLE_PASS" >> "$GITHUB_ENV"
+          echo "APPLE_TEAM_ID=$TSB_TEAM_ID" >> "$GITHUB_ENV"
+        env:
+          TSB_MAC_PFX: ${{ secrets.MAC_CERT_PFX_BASE64 }}
+          TSB_MAC_PASS: ${{ secrets.MAC_CERT_PASSWORD }}
+          TSB_APPLE_ID: ${{ secrets.APPLE_ID }}
+          TSB_APPLE_PASS: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          TSB_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
       - name: Build installer
         run: npx electron-builder ${{ matrix.args }} --publish never
         env:
-          # Never attempt code signing in CI (no certificates configured).
+          # Never search the keychain for identities; signing happens only via
+          # the explicit CSC_LINK certificate configured above (or none).
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
 
       - name: Upload installer(s)

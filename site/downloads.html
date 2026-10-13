@@ -66,7 +66,7 @@
             <span>Windows 10 / 11 &middot; 64-bit <span class="meta">— 90.9 MiB</span></span>
             <span class="go">Download &darr;</span>
           </a>
-          <p class="hint">Signed installers are not available yet — Windows SmartScreen may warn. Click <em>More info &rarr; Run anyway</em>.</p>
+          <p class="hint">Installers are unsigned until a code-signing certificate is configured (the release build signs automatically once one is — see <a href="/documentation#signing">code signing</a>). Until then Windows SmartScreen may warn: click <em>More info &rarr; Run anyway</em>. Always <a href="#verify">verify the SHA-256</a> first.</p>
         </div>
 
         <div class="platform" data-platform="mac">
@@ -83,7 +83,7 @@
             <span>Intel <span class="meta">— 115.6 MiB</span></span>
             <span class="go">Download &darr;</span>
           </a>
-          <p class="hint">Builds are unsigned. On first launch, right-click the app &rarr; <em>Open</em>, or run <code>xattr -dr com.apple.quarantine /Applications/Tor\ Secret\ Browser.app</code>.</p>
+          <p class="hint">Builds are unsigned until an Apple Developer certificate is configured (the release build signs and notarizes automatically once one is — see <a href="/documentation#signing">code signing</a>). Until then, on first launch right-click the app &rarr; <em>Open</em>, or run <code>xattr -dr com.apple.quarantine /Applications/Tor\ Secret\ Browser.app</code>.</p>
         </div>
 
         <div class="platform" data-platform="linux">

@@ -149,6 +149,26 @@ Release — including the electron-builder update metadata (`latest.yml`,
 themselves. Bump `version` in `package.json` before tagging so the app knows it
 is older than the release.
 
+### Code signing (opt-in, automatic when configured)
+
+Releases are currently **unsigned**, so Windows SmartScreen and macOS Gatekeeper
+warn on first run. Only a certificate issued in the publisher's name removes
+those warnings — self-signed certificates do not. The build already signs
+automatically when credentials exist; nothing else needs to change:
+
+- **Windows (Authenticode):** get a code-signing certificate (EV = instant
+  SmartScreen reputation; standard OV builds it over installs/time; free for
+  open source via SignPath). Export `.pfx`, then add repository secrets
+  `WIN_CERT_PFX_BASE64` (base64 of the file) and `WIN_CERT_PASSWORD`.
+- **macOS (Developer ID + notarization):** Apple Developer Program + a Developer
+  ID Application certificate. Export `.p12`, then add `MAC_CERT_PFX_BASE64`,
+  `MAC_CERT_PASSWORD`, `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, and
+  `APPLE_TEAM_ID`. The build signs (hardened runtime) and notarizes.
+- **Local builds:** set `CSC_LINK` to the `.pfx`/`.p12` path and
+  `CSC_KEY_PASSWORD` (plus `APPLE_*` for notarization) before `npm run dist`.
+  Without them the build stays unsigned and behaves exactly as today
+  (`CSC_IDENTITY_AUTO_DISCOVERY=false` keeps CI unsigned and warning-free).
+
 ---
 
 ## Operating notes & troubleshooting

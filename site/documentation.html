@@ -40,6 +40,7 @@
         <a href="#getting-started">Getting started</a>
         <a href="#using">Using the browser</a>
         <a href="#updates">Automatic updates</a>
+        <a href="#signing">Code signing</a>
         <a href="#links">Link directory</a>
         <a href="#scanner">File scanner</a>
         <a href="#privacy">How privacy works</a>
@@ -107,6 +108,38 @@
         <p>Every release also publishes its update metadata (<code>latest*.yml</code>) and a
            <code>SHA256SUMS.txt</code> so each downloaded file can be independently verified —
            the same values the <a href="/scan">file scanner</a> checks against.</p>
+
+        <h2 id="signing">Code signing</h2>
+        <p>Releases are currently <strong>unsigned</strong>, which is why Windows SmartScreen
+           and macOS Gatekeeper warn on first run. There is no free trick around this: a
+           warning-free installer needs a certificate issued in the publisher's name. The
+           release pipeline is already wired to <strong>sign automatically</strong> the moment
+           certificates are configured — no code changes needed:</p>
+        <ul class="checks">
+          <li><strong>Windows (Authenticode).</strong> Needs a code-signing certificate: an EV
+              certificate gives SmartScreen reputation immediately, a standard (OV) one builds
+              it over installs and time. Free option for open source:
+              <a href="https://signpath.io/" target="_blank" rel="noopener">SignPath</a>.
+              Export it as <code>.pfx</code> and add two repository secrets:
+              <code>WIN_CERT_PFX_BASE64</code> (base64 of the file) and
+              <code>WIN_CERT_PASSWORD</code>.</li>
+          <li><strong>macOS (Developer ID + notarization).</strong> Needs the Apple Developer
+              Program and a Developer ID Application certificate. Export it as
+              <code>.p12</code> and add <code>MAC_CERT_PFX_BASE64</code>,
+              <code>MAC_CERT_PASSWORD</code>, <code>APPLE_ID</code>,
+              <code>APPLE_APP_SPECIFIC_PASSWORD</code> and <code>APPLE_TEAM_ID</code> —
+              the build then signs with the hardened runtime and notarizes the DMG.</li>
+          <li><strong>Local builds.</strong> Set <code>CSC_LINK</code> to your
+              <code>.pfx</code>/<code>.p12</code> path and <code>CSC_KEY_PASSWORD</code> to its
+              password (plus the <code>APPLE_*</code> variables for notarization) before
+              running <code>npm run dist</code>. Without them the build stays unsigned and
+              works exactly as before.</li>
+        </ul>
+        <div class="note">
+          Self-signed certificates do <em>not</em> remove SmartScreen or Gatekeeper warnings —
+          only a publicly trusted CA (Windows) or Apple-issued Developer ID (macOS) does.
+          Until then, always verify the SHA-256 checksum before running an installer.
+        </div>
 
         <h2 id="links">Clearnet &amp; .onion link directory</h2>
         <p>The new-tab page ships with a built-in directory of clearnet and
