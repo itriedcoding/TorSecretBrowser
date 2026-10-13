@@ -348,6 +348,11 @@ function registerIpc() {
     return true;
   });
 
+  ipcMain.handle('tabs:proceed-cert', (_e, { id, allow }) => {
+    if (tabs) return tabs.proceedCert(id, allow);
+    return false;
+  });
+
   ipcMain.handle('ui:content-bounds', (_e, rect) => {
     if (tabs) tabs.setBounds(rect);
     return true;

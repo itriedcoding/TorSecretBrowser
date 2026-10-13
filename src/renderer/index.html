@@ -97,6 +97,21 @@
     <p class="update-privacy">This is a Tor gateway, not a commercial VPN: no third-party servers, TCP-only, and every connection exits through the Tor network. Point any app at the loopback endpoints above.</p>
   </div>
 
+  <!-- ===================== Certificate interstitial === -->
+  <div id="cert-panel" class="hidden" role="alertdialog" aria-label="Untrusted certificate">
+    <div class="update-head">
+      <strong>Untrusted .onion certificate</strong>
+      <button id="cert-close" class="update-close" title="Go back" aria-label="Go back">&times;</button>
+    </div>
+    <p class="update-status">The onion service <code id="cert-host">…</code> presented an HTTPS certificate that is not publicly trusted (<span id="cert-error">…</span>). Onion names are self-authenticating, but a stranger could still be impersonating this service.</p>
+    <div class="cert-fingerprint"><span>Fingerprint (SHA-256)</span><code id="cert-fingerprint">…</code></div>
+    <div class="update-actions">
+      <button id="cert-continue" class="update-action primary">Continue anyway</button>
+      <button id="cert-back" class="update-action">Go back</button>
+    </div>
+    <p class="update-privacy">Only continue if you expected this — for example, a private service using a self-signed certificate. Never enter passwords on a page you did not expect.</p>
+  </div>
+
   <!-- ===================== Content viewport ============= -->
   <!-- The native WebContentsView is positioned exactly over this element. -->
   <div id="viewport"></div>

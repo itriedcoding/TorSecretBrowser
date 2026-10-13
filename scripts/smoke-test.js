@@ -155,8 +155,11 @@ app.whenReady().then(async () => {
   const tabA = tabs.tabs.get(idA);
   check('tab created', () => assert.ok(tabA));
 
-  await waitFor(() => tabA.url && tabA.url.startsWith('file:'), 8000, 'start page load').catch(() => {});
-  await delay(1000);
+  await waitFor(
+    () => tabA.url && tabA.url.startsWith('file:') && tabA.title && tabA.title.length > 0,
+    15000,
+    'start page url + title'
+  ).catch(() => {});
   check('start page has a url', () => assert.ok(tabA.url && tabA.url.startsWith('file:')));
   check('start page loaded a title', () => assert.ok(tabA.title && tabA.title.length > 0));
 
@@ -263,6 +266,46 @@ app.whenReady().then(async () => {
 
   await vpn.stop();
   check('gateway stops cleanly', () => assert.strictEqual(vpn.running, false));
+
+  // --- certificate interstitial: real handler, simulated TLS failure ------
+  const tabCert = tabs.tabs.get(idA);
+  const fakeEvent = { preventDefault() {} };
+  let onionDecision = 'undecided';
+  tabCert.view.webContents.emit(
+    'certificate-error',
+    fakeEvent,
+    'https://someservice.onion/',
+    'net::ERR_CERT_AUTHORITY_INVALID',
+    { fingerprint: 'AA:BB', subjectName: 's', issuerName: 's' },
+    (allow) => {
+      onionDecision = allow;
+    }
+  );
+  await delay(200);
+  const listedCert = tabs.list().find((t) => t.id === idA);
+  check('onion cert error surfaces as certBlocked (not a dead banner)', () =>
+    assert.ok(
+      listedCert && listedCert.certBlocked && listedCert.certBlocked.host === 'someservice.onion',
+      JSON.stringify(listedCert && listedCert.certBlocked)
+    ));
+  check('denying an onion cert invokes the trust callback with false', () => {
+    assert.strictEqual(tabs.proceedCert(idA, false), true);
+    assert.strictEqual(onionDecision, false);
+  });
+
+  let clearDecision = 'undecided';
+  tabCert.view.webContents.emit(
+    'certificate-error',
+    fakeEvent,
+    'https://example.com/',
+    'net::ERR_CERT_AUTHORITY_INVALID',
+    { fingerprint: 'CC' },
+    (allow) => {
+      clearDecision = allow;
+    }
+  );
+  check('clearnet cert error is denied strictly', () =>
+    assert.strictEqual(clearDecision, false));
 
   console.log(`\n${failures === 0 ? 'ALL SMOKE TESTS PASSED' : failures + ' SMOKE TEST(S) FAILED'}`);
 

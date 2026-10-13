@@ -79,6 +79,7 @@ class TabManager extends EventEmitter {
       loading: t.loading,
       error: t.error,
       pending: !!t.pendingUrl,
+      certBlocked: t.certBlocked || null,
       canGoBack: t.canGoBack,
       canGoForward: t.canGoForward,
       active: t.id === this.activeId,
@@ -149,6 +150,8 @@ class TabManager extends EventEmitter {
       loading: false,
       error: null,
       pendingUrl: null,
+      pendingCert: null,
+      certBlocked: null,
       canGoBack: false,
       canGoForward: false,
       _injected: false,
@@ -223,6 +226,40 @@ class TabManager extends EventEmitter {
       this.emit('log', `page failed to load: ${desc} (${code}) url=${validatedURL}`);
       refresh();
     });
+    // TLS certificate errors (e.g. an .onion serving HTTPS with a self-signed
+    // certificate: ERR_CERT_AUTHORITY_INVALID). Clearnet stays strict. For
+    // .onion the trust decision is held for an explicit user interstitial —
+    // without it, Retry just fails identically forever.
+    wc.on('certificate-error', (event, url, error, certificate, callback) => {
+      event.preventDefault();
+      let host = '';
+      try {
+        host = new URL(url).hostname.toLowerCase();
+      } catch (_) {}
+      const fingerprint = (certificate && certificate.fingerprint) || '';
+      const subject = (certificate && certificate.subjectName) || '';
+      const issuer = (certificate && certificate.issuerName) || '';
+      this.emit(
+        'log',
+        `TLS certificate error on ${url}: ${error} fingerprint=${fingerprint} subject=${subject} issuer=${issuer}`
+      );
+      if (!host.endsWith('.onion')) {
+        try {
+          callback(false);
+        } catch (_) {}
+        return;
+      }
+      if (tab.pendingCert) {
+        try {
+          tab.pendingCert.callback(false);
+        } catch (_) {}
+      }
+      tab.pendingCert = { callback, url, error, host };
+      tab.certBlocked = { url, error, host, fingerprint, subject, issuer };
+      tab.loading = false;
+      tab.error = null;
+      this._emitUpdate();
+    });
     wc.on('render-process-gone', (_e, details) => {
       tab.error = `Renderer gone: ${details.reason}`;
       refresh();
@@ -295,6 +332,12 @@ class TabManager extends EventEmitter {
   closeTab(id) {
     const tab = this.tabs.get(id);
     if (!tab) return;
+    if (tab.pendingCert) {
+      try {
+        tab.pendingCert.callback(false);
+      } catch (_) {}
+      tab.pendingCert = null;
+    }
     if (tab.id === this.activeId) {
       try {
         this.window.contentView.removeChildView(tab.view);
@@ -365,6 +408,40 @@ class TabManager extends EventEmitter {
   stop(id) {
     const tab = this.tabs.get(id);
     if (tab) tab.view.webContents.stop();
+  }
+
+  /**
+   * Resolve a held .onion certificate decision from the interstitial.
+   * allow=true trusts the certificate for this session and reloads;
+   * allow=false denies it and leaves the untrusted page (back or start page).
+   */
+  proceedCert(id, allow) {
+    const tab = this.tabs.get(id);
+    if (!tab || !tab.pendingCert) return false;
+    const pending = tab.pendingCert;
+    tab.pendingCert = null;
+    tab.certBlocked = null;
+    try {
+      pending.callback(!!allow);
+    } catch (_) {}
+    if (allow) {
+      tab.error = null;
+      tab.view.webContents.loadURL(pending.url).catch((err) => {
+        tab.error = err.message;
+        this._emitUpdate();
+      });
+    } else {
+      let canBack = false;
+      try {
+        const wc = tab.view.webContents;
+        canBack = wc.navigationHistory ? wc.navigationHistory.canGoBack() : wc.canGoBack();
+      } catch (_) {}
+      // did-start-loading on the new navigation clears any stale error.
+      if (canBack) this.back(id);
+      else this._loadStartPage(tab);
+    }
+    this._emitUpdate();
+    return true;
   }
 
   /* -------------------------------- bounds ------------------------------ */

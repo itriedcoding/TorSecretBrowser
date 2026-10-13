@@ -54,6 +54,13 @@ const els = {
   vpnCopyHttp: document.getElementById('vpn-copy-http'),
   vpnSystem: document.getElementById('vpn-system'),
   vpnTestResult: document.getElementById('vpn-test-result'),
+  certPanel: document.getElementById('cert-panel'),
+  certHost: document.getElementById('cert-host'),
+  certError: document.getElementById('cert-error'),
+  certFingerprint: document.getElementById('cert-fingerprint'),
+  certContinue: document.getElementById('cert-continue'),
+  certBack: document.getElementById('cert-back'),
+  certClose: document.getElementById('cert-close'),
 };
 
 const state = {
@@ -174,6 +181,7 @@ function updateToolbar() {
   els.scheme.classList.toggle('onion', isOnion);
 
   renderPageNotice();
+  renderCert();
 }
 
 /* Show why a page is blank: a load error, a navigation still waiting for Tor to
@@ -181,6 +189,13 @@ function updateToolbar() {
  * .onion). Without this a failed or slow onion/clearnet load is silent. */
 function renderPageNotice() {
   const tab = activeTab();
+  // A held certificate decision owns the UI (the interstitial panel below).
+  if (tab && tab.certBlocked) {
+    els.pageNotice.classList.add('hidden');
+    els.viewport.style.top = '';
+    syncBounds();
+    return;
+  }
   let text = '';
   let isError = false;
   let showRetry = false;
@@ -217,6 +232,35 @@ function renderPageNotice() {
   els.pageNotice.classList.remove('hidden');
   els.viewport.style.top = 84 + els.pageNotice.offsetHeight + 'px';
   syncBounds();
+}
+
+/* Certificate interstitial: shown when an .onion's HTTPS certificate is not
+ * publicly trusted. The user — not the app — decides whether to continue. */
+function renderCert() {
+  const tab = activeTab();
+  const blocked = tab && tab.certBlocked;
+  if (!blocked) {
+    els.certPanel.classList.add('hidden');
+    return;
+  }
+  els.certHost.textContent = blocked.host || blocked.url || 'this onion service';
+  els.certError.textContent = blocked.error || 'certificate error';
+  els.certFingerprint.textContent = blocked.fingerprint || '(no fingerprint captured)';
+  els.certPanel.classList.remove('hidden');
+}
+
+async function answerCert(allow) {
+  const tab = activeTab();
+  if (!tab) return;
+  state.dismissed = { id: null, text: null };
+  els.certContinue.disabled = true;
+  els.certBack.disabled = true;
+  try {
+    await api.proceedCert(tab.id, allow);
+  } catch (_) {}
+  els.certContinue.disabled = false;
+  els.certBack.disabled = false;
+  renderCert();
 }
 
 function applyTabs(list) {
@@ -600,6 +644,11 @@ els.vpnCopySocks.addEventListener('click', () =>
 els.vpnCopyHttp.addEventListener('click', () =>
   copyText(els.vpnHttp.textContent, els.vpnCopyHttp)
 );
+
+/* --- certificate interstitial ------------------------------------------ */
+els.certContinue.addEventListener('click', () => answerCert(true));
+els.certBack.addEventListener('click', () => answerCert(false));
+els.certClose.addEventListener('click', () => answerCert(false));
 
 // Keyboard shortcuts that work while the chrome UI itself has focus. Shortcuts
 // while a web page is focused are handled in the main process (tabs.js).

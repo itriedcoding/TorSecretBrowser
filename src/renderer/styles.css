@@ -381,6 +381,40 @@ html, body {
 .vpn-sysrow input { margin-top: 2px; }
 #vpn-btn.active { color: var(--ok); }
 
+/* --------------------------- cert interstitial ------------------------- */
+#cert-panel {
+  position: absolute;
+  top: 90px;
+  right: 10px;
+  width: 400px;
+  max-width: calc(100vw - 20px);
+  background: var(--bg-elev);
+  border: 1px solid #6b2424;
+  border-radius: 12px;
+  padding: 14px 16px;
+  z-index: 30;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+#cert-panel.hidden { display: none; }
+#cert-panel code { user-select: text; }
+.cert-fingerprint {
+  background: #131316;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+  margin: 0 0 12px;
+  font-size: 11px;
+  color: var(--fg-dim);
+}
+.cert-fingerprint span {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.cert-fingerprint code { overflow-wrap: anywhere; }
+
 /* ------------------------------ viewport ------------------------------- */
 /* This element is purely a placeholder; the native view is drawn on top of
    exactly this rectangle. It must fill all remaining space. */

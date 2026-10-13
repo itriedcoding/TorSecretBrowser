@@ -168,6 +168,14 @@
           than leaving you guessing. If a page fails, you get the real error and a Retry
           button, not a silent blank page.
         </div>
+        <div class="note">
+          Many onions serve HTTPS with a self-signed certificate, which shows as
+          <code>ERR_CERT_AUTHORITY_INVALID</code> — pressing Retry then fails forever,
+          because the certificate never changes. For <code>.onion</code> addresses the
+          browser instead shows exactly which certificate was presented (SHA-256
+          fingerprint included) and lets you continue explicitly or go back. Clearnet
+          certificate errors stay strictly blocked.
+        </div>
 
         <h2 id="identity">New Identity</h2>
         <p>Choosing <em>New Identity</em>:</p>

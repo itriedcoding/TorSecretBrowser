@@ -32,6 +32,7 @@ contextBridge.exposeInMainWorld('tsb', {
   forward: (id) => ipcRenderer.invoke('tabs:forward', id),
   reload: (id) => ipcRenderer.invoke('tabs:reload', id),
   stop: (id) => ipcRenderer.invoke('tabs:stop', id),
+  proceedCert: (id, allow) => ipcRenderer.invoke('tabs:proceed-cert', { id, allow }),
 
   // --- layout --------------------------------------------------------------
   setContentBounds: (rect) => ipcRenderer.invoke('ui:content-bounds', rect),
